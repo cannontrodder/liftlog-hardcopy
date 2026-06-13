@@ -30,20 +30,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION || 'eu-west-1' }}
 
-      - name: Find newest .liftlog file in S3
+      - name: Find newest backup file in S3
         id: find
         env:
           LIFTLOG_S3_BUCKET: ${{ secrets.LIFTLOG_S3_BUCKET }}
-          LIFTLOG_S3_PREFIX: ${{ secrets.LIFTLOG_S3_PREFIX || 'liftlog/' }}
+          LIFTLOG_S3_PREFIX: ${{ secrets.LIFTLOG_S3_PREFIX }}
         run: |
           NEWEST=$(aws s3 ls "s3://${LIFTLOG_S3_BUCKET}/${LIFTLOG_S3_PREFIX}" \
             --recursive \
-            | grep '\.liftlog$' \
+            | grep '\.gz$' \
             | sort -k1,2 \
             | tail -1)
 
           if [ -z "$NEWEST" ]; then
-            echo "No .liftlog files found in s3://${LIFTLOG_S3_BUCKET}/${LIFTLOG_S3_PREFIX}"
+            echo "No .gz files found in s3://${LIFTLOG_S3_BUCKET}/${LIFTLOG_S3_PREFIX}"
             exit 1
           fi
 
@@ -85,8 +85,8 @@ jobs:
           LIFTLOG_S3_BUCKET: ${{ secrets.LIFTLOG_S3_BUCKET }}
         run: |
           S3_KEY="${{ steps.find.outputs.s3_key }}"
-          aws s3 cp "s3://${LIFTLOG_S3_BUCKET}/${S3_KEY}" backup.liftlog
-          gunzip -c backup.liftlog > data/backup.json
+          aws s3 cp "s3://${LIFTLOG_S3_BUCKET}/${S3_KEY}" backup.gz
+          gunzip -c backup.gz > data/backup.json
           echo "Decompressed $(wc -c < data/backup.json) bytes to data/backup.json"
 
       - name: Update metadata files
