@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>LiftLog Workout Map</title>
+    <script src="./workout-data.js"></script>
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: #f4f1e8;
+        --ink: #17211c;
+        --muted: #657068;
+        --line: #ccd2c9;
+        --track: #bec8be;
+        --forest: #184d39;
+        --lime: #d6f06b;
+        --orange: #f26d3d;
+        --white: #fffef9;
+        --shadow: 0 14px 35px rgba(30, 49, 39, 0.12);
+        font-family: "Avenir Next Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+      button, input { font: inherit; }
+      button { cursor: pointer; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--ink);
+        background:
+          linear-gradient(rgba(24, 77, 57, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(24, 77, 57, 0.035) 1px, transparent 1px),
+          var(--paper);
+        background-size: 22px 22px;
+      }
+
+      .app {
+        width: min(100%, 760px);
+        margin: 0 auto;
+        padding-bottom: 118px;
+      }
+
+      .masthead {
+        position: relative;
+        overflow: hidden;
+        padding: 22px 18px 16px;
+        color: var(--white);
+        background: var(--forest);
+      }
+
+      .masthead::after {
+        position: absolute;
+        right: -38px;
+        bottom: -48px;
+        width: 150px;
+        height: 150px;
+        border: 30px solid rgba(214, 240, 107, 0.14);
+        border-radius: 50%;
+        content: "";
+      }
+
+      .overline {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin: 0 0 9px;
+        color: var(--lime);
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 0.17em;
+        text-transform: uppercase;
+      }
+
+      .overline::before {
+        width: 22px;
+        height: 3px;
+        background: var(--lime);
+        content: "";
+      }
+
+      h1 {
+        position: relative;
+        z-index: 1;
+        max-width: 340px;
+        margin: 0;
+        font-size: clamp(2.5rem, 13vw, 4.5rem);
+        font-weight: 900;
+        letter-spacing: -0.055em;
+        line-height: 0.86;
+        text-transform: uppercase;
+      }
+
+      .backup {
+        position: relative;
+        z-index: 1;
+        margin: 13px 0 0;
+        color: rgba(255, 254, 249, 0.7);
+        font-size: 0.77rem;
+        letter-spacing: 0.03em;
+      }
+
+      .session-strip {
+        position: sticky;
+        z-index: 20;
+        top: 0;
+        display: flex;
+        gap: 7px;
+        overflow-x: auto;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(244, 241, 232, 0.94);
+        scrollbar-width: none;
+        backdrop-filter: blur(12px);
+      }
+
+      .session-strip::-webkit-scrollbar { display: none; }
+
+      .session-tab {
+        flex: 0 0 auto;
+        min-width: 84px;
+        padding: 9px 13px;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        color: var(--muted);
+        background: rgba(255, 254, 249, 0.7);
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .session-tab[aria-selected="true"] {
+        border-color: var(--forest);
+        color: var(--white);
+        background: var(--forest);
+        box-shadow: inset 0 -3px 0 var(--lime);
+      }
+
+      .route-head {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 16px;
+        align-items: end;
+        padding: 20px 18px 16px;
+      }
+
+      .route-kicker {
+        margin: 0 0 3px;
+        color: var(--orange);
+        font-size: 0.68rem;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 900;
+        letter-spacing: -0.045em;
+        line-height: 1;
+      }
+
+      .route-meta {
+        margin: 5px 0 0;
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      .progress-ring {
+        display: grid;
+        width: 58px;
+        height: 58px;
+        place-items: center;
+        border-radius: 50%;
+        background: conic-gradient(var(--orange) var(--progress, 0%), var(--line) 0);
+      }
+
+      .progress-ring::before {
+        grid-area: 1 / 1;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: var(--paper);
+        content: "";
+      }
+
+      .progress-ring span {
+        z-index: 1;
+        font-size: 0.76rem;
+        font-weight: 900;
+      }
+
+      .route {
+        position: relative;
+        margin: 0 14px;
+        padding: 2px 0 22px 42px;
+      }
+
+      .route::before {
+        position: absolute;
+        top: 12px;
+        bottom: 12px;
+        left: 17px;
+        width: 3px;
+        border-radius: 3px;
+        background: repeating-linear-gradient(to bottom, var(--track) 0 8px, transparent 8px 13px);
+        content: "";
+      }
+
+      .stop {
+        position: relative;
+        margin-bottom: 14px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: rgba(255, 254, 249, 0.9);
+        box-shadow: var(--shadow);
+      }
+
+      .stop-marker {
+        position: absolute;
+        top: 14px;
+        left: -42px;
+        display: grid;
+        width: 34px;
+        height: 34px;
+        place-items: center;
+        border: 3px solid var(--paper);
+        border-radius: 50%;
+        color: var(--white);
+        background: var(--forest);
+        box-shadow: 0 0 0 2px var(--forest);
+        font-size: 0.72rem;
+        font-weight: 900;
+      }
+
+      .stop.complete .stop-marker {
+        color: var(--forest);
+        background: var(--lime);
+      }
+
+      .stop-head {
+        padding: 14px 13px 11px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .stop-title-row {
+        display: flex;
+        gap: 10px;
+        justify-content: space-between;
+        align-items: start;
+      }
+
+      h3 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 900;
+        letter-spacing: -0.018em;
+        line-height: 1.08;
+      }
+
+      .target {
+        flex: 0 0 auto;
+        padding: 4px 6px;
+        border-radius: 3px;
+        color: var(--forest);
+        background: var(--lime);
+        font-size: 0.63rem;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .last-time {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 0.73rem;
+        line-height: 1.35;
+      }
+
+      .last-time strong {
+        color: var(--ink);
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      .set-grid {
+        display: grid;
+        gap: 1px;
+        background: var(--line);
+      }
+
+      .set-row {
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr) minmax(0, 1fr) 40px;
+        gap: 7px;
+        align-items: end;
+        padding: 9px 10px;
+        background: var(--white);
+      }
+
+      .set-number {
+        align-self: center;
+        color: var(--muted);
+        font-size: 0.7rem;
+        font-weight: 900;
+        text-align: center;
+      }
+
+      .set-field {
+        display: grid;
+        gap: 3px;
+      }
+
+      .set-field label {
+        color: var(--muted);
+        font-size: 0.57rem;
+        font-weight: 800;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+
+      .set-field input {
+        min-width: 0;
+        width: 100%;
+        height: 36px;
+        padding: 5px 7px;
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        color: var(--ink);
+        background: var(--paper);
+        font-size: 0.98rem;
+        font-weight: 800;
+      }
+
+      .set-field input:focus {
+        border-color: var(--forest);
+        outline: 2px solid rgba(24, 77, 57, 0.13);
+      }
+
+      .set-done {
+        display: grid;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        color: var(--muted);
+        background: transparent;
+        font-size: 0;
+      }
+
+      .set-done::after {
+        font-size: 1rem;
+        font-weight: 900;
+        content: "✓";
+      }
+
+      .set-done[aria-pressed="true"] {
+        border-color: var(--forest);
+        color: var(--forest);
+        background: var(--lime);
+      }
+
+      .timer-dock {
+        position: fixed;
+        z-index: 50;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        padding: 9px 10px calc(9px + env(safe-area-inset-bottom));
+        pointer-events: none;
+      }
+
+      .timer-inner {
+        display: grid;
+        grid-template-columns: auto 1fr auto auto;
+        gap: 9px;
+        align-items: center;
+        width: min(100%, 730px);
+        margin: 0 auto;
+        padding: 10px 10px 10px 13px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 8px;
+        color: var(--white);
+        background: rgba(19, 35, 27, 0.96);
+        box-shadow: 0 12px 35px rgba(10, 25, 17, 0.3);
+        pointer-events: auto;
+        backdrop-filter: blur(14px);
+      }
+
+      .timer-copy small {
+        display: block;
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 0.55rem;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .timer-copy strong {
+        display: block;
+        margin-top: 1px;
+        font-size: 1.55rem;
+        letter-spacing: -0.04em;
+        line-height: 1;
+      }
+
+      .timer-bar {
+        overflow: hidden;
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.14);
+      }
+
+      .timer-bar span {
+        display: block;
+        width: var(--timer-progress, 0%);
+        height: 100%;
+        background: var(--lime);
+        transition: width 0.25s linear;
+      }
+
+      .dock-button {
+        min-width: 42px;
+        height: 38px;
+        padding: 0 10px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 5px;
+        color: var(--white);
+        background: transparent;
+        font-size: 0.68rem;
+        font-weight: 900;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .dock-button.primary {
+        border-color: var(--lime);
+        color: var(--forest);
+        background: var(--lime);
+      }
+
+      .empty {
+        margin: 24px 16px;
+        padding: 20px;
+        border: 1px dashed var(--line);
+        color: var(--muted);
+        background: rgba(255, 254, 249, 0.7);
+        line-height: 1.45;
+      }
+
+      @media (min-width: 600px) {
+        .masthead { border-radius: 0 0 12px 12px; padding: 32px 28px 24px; }
+        .route-head { padding: 26px 24px 20px; }
+        .route { margin: 0 24px; }
+        .set-row { grid-template-columns: 38px minmax(0, 130px) minmax(0, 130px) 44px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main id="app" class="app">
+      <div class="empty">Loading workout map...</div>
+    </main>
+
+    <aside class="timer-dock" aria-label="Rest timer">
+      <div class="timer-inner">
+        <div class="timer-copy">
+          <small>Rest timer</small>
+          <strong id="timerReadout">1:30</strong>
+        </div>
+        <div class="timer-bar" aria-hidden="true"><span id="timerBar"></span></div>
+        <button id="timerAdjust" class="dock-button" type="button">+30</button>
+        <button id="timerToggle" class="dock-button primary" type="button">Start</button>
+      </div>
+    </aside>
+
+    <script>
+      (() => {
+        "use strict";
+
+        const STORAGE_KEY = "liftlog-hardcopy-spike:variant-c:v1";
+        const app = document.querySelector("#app");
+        const timerReadout = document.querySelector("#timerReadout");
+        const timerBar = document.querySelector("#timerBar");
+        const timerToggle = document.querySelector("#timerToggle");
+        const timerAdjust = document.querySelector("#timerAdjust");
+        const program = window.WORKOUT_DATA;
+
+        let activeSession = 0;
+        let timerId = null;
+        let timerRemaining = 90;
+        let timerTotal = 90;
+        let timerRunning = false;
+        let saved = {};
+
+        try {
+          saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+        } catch {
+          saved = {};
+        }
+
+        const escapeHtml = (value) =>
+          String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;");
+
+        const formatTime = (seconds) =>
+          `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+
+        const persist = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+
+        function setState(sessionName, exerciseName, setIndex) {
+          saved[sessionName] ||= {};
+          saved[sessionName][exerciseName] ||= {};
+          saved[sessionName][exerciseName][setIndex] ||= { weight: "", reps: "", done: false };
+          return saved[sessionName][exerciseName][setIndex];
+        }
+
+        function completion(session) {
+          let done = 0;
+          const total = session.exercises.reduce((sum, exercise) => sum + exercise.sets, 0);
+          session.exercises.forEach((exercise) => {
+            for (let i = 0; i < exercise.sets; i += 1) {
+              if (setState(session.name, exercise.name, i).done) done += 1;
+            }
+          });
+          return { done, total, percent: total ? Math.round((done / total) * 100) : 0 };
+        }
+
+        function lastSummary(exercise) {
+          if (!exercise.last?.length) return "No previous sets recorded";
+          return exercise.last
+            .map((set, index) => `S${index + 1} ${set.weight || 0}kg × ${set.reps}`)
+            .join("  /  ");
+        }
+
+        function renderSetRows(session, exercise) {
+          return Array.from({ length: exercise.sets }, (_, setIndex) => {
+            const state = setState(session.name, exercise.name, setIndex);
+            const previous = exercise.last?.[setIndex] || {};
+            return `
+              <div class="set-row">
+                <span class="set-number">S${setIndex + 1}</span>
+                <div class="set-field">
+                  <label for="w-${activeSession}-${setIndex}-${escapeHtml(exercise.name)}">Weight kg</label>
+                  <input id="w-${activeSession}-${setIndex}-${escapeHtml(exercise.name)}" inputmode="decimal"
+                    aria-label="${escapeHtml(exercise.name)} set ${setIndex + 1} weight"
+                    data-field="weight" data-exercise="${escapeHtml(exercise.name)}" data-set="${setIndex}"
+                    placeholder="${escapeHtml(previous.weight ?? "—")}" value="${escapeHtml(state.weight)}">
+                </div>
+                <div class="set-field">
+                  <label for="r-${activeSession}-${setIndex}-${escapeHtml(exercise.name)}">Reps</label>
+                  <input id="r-${activeSession}-${setIndex}-${escapeHtml(exercise.name)}" inputmode="numeric"
+                    aria-label="${escapeHtml(exercise.name)} set ${setIndex + 1} reps"
+                    data-field="reps" data-exercise="${escapeHtml(exercise.name)}" data-set="${setIndex}"
+                    placeholder="${escapeHtml(previous.reps ?? exercise.repsPerSet)}" value="${escapeHtml(state.reps)}">
+                </div>
+                <button class="set-done" type="button" aria-label="Mark set ${setIndex + 1} complete"
+                  aria-pressed="${state.done}" data-done data-exercise="${escapeHtml(exercise.name)}" data-set="${setIndex}">
+                  Complete
+                </button>
+              </div>
+            `;
+          }).join("");
+        }
+
+        function render() {
+          if (!program?.sessions?.length) {
+            app.innerHTML = `<div class="empty"><strong>Workout data unavailable.</strong><br>Variant C expects <code>window.WORKOUT_DATA</code> from <code>workout-data.js</code>.</div>`;
+            return;
+          }
+
+          const session = program.sessions[activeSession];
+          const progress = completion(session);
+          const totalExercises = session.exercises.length;
+          timerRemaining = timerRunning ? timerRemaining : (session.targetRestSeconds || 90);
+          timerTotal = timerRunning ? timerTotal : timerRemaining;
+
+          app.innerHTML = `
+            <header class="masthead">
+              <p class="overline">Workout map · latest plan</p>
+              <h1>${escapeHtml(program.name)}</h1>
+              <p class="backup">Backup ${escapeHtml(program.backupDate || "date unavailable")} · Progress saves on this device</p>
+            </header>
+            <nav class="session-strip" aria-label="Workout sessions">
+              ${program.sessions.map((item, index) => `
+                <button class="session-tab" type="button" aria-selected="${index === activeSession}" data-session="${index}">
+                  ${String(index + 1).padStart(2, "0")} ${escapeHtml(item.name)}
+                </button>
+              `).join("")}
+            </nav>
+            <section class="route-head">
+              <div>
+                <p class="route-kicker">Route ${String(activeSession + 1).padStart(2, "0")} of ${String(program.sessions.length).padStart(2, "0")}</p>
+                <h2>${escapeHtml(session.name)}</h2>
+                <p class="route-meta">${totalExercises} stops · ${progress.total} sets · ${formatTime(session.targetRestSeconds || 90)} rest</p>
+              </div>
+              <div class="progress-ring" style="--progress:${progress.percent}%"><span>${progress.percent}%</span></div>
+            </section>
+            <section class="route" aria-label="${escapeHtml(session.name)} exercise route">
+              ${session.exercises.map((exercise, index) => {
+                const isComplete = Array.from({ length: exercise.sets }, (_, setIndex) =>
+                  setState(session.name, exercise.name, setIndex).done
+                ).every(Boolean);
+                return `
+                  <article class="stop ${isComplete ? "complete" : ""}">
+                    <span class="stop-marker">${isComplete ? "✓" : String(index + 1).padStart(2, "0")}</span>
+                    <header class="stop-head">
+                      <div class="stop-title-row">
+                        <h3>${escapeHtml(exercise.name)}</h3>
+                        <span class="target">${exercise.sets} × ${exercise.repsPerSet}</span>
+                      </div>
+                      <p class="last-time"><strong>Last</strong> ${escapeHtml(lastSummary(exercise))}</p>
+                    </header>
+                    <div class="set-grid">${renderSetRows(session, exercise)}</div>
+                  </article>
+                `;
+              }).join("")}
+            </section>
+          `;
+
+          bindPageEvents();
+          updateTimer();
+        }
+
+        function bindPageEvents() {
+          const session = program.sessions[activeSession];
+
+          app.querySelectorAll("[data-session]").forEach((button) => {
+            button.addEventListener("click", () => {
+              activeSession = Number(button.dataset.session);
+              stopTimer();
+              render();
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            });
+          });
+
+          app.querySelectorAll("[data-field]").forEach((input) => {
+            input.addEventListener("input", () => {
+              setState(session.name, input.dataset.exercise, input.dataset.set)[input.dataset.field] = input.value;
+              persist();
+            });
+          });
+
+          app.querySelectorAll("[data-done]").forEach((button) => {
+            button.addEventListener("click", () => {
+              const state = setState(session.name, button.dataset.exercise, button.dataset.set);
+              state.done = !state.done;
+              persist();
+              if (state.done) startTimer(session.targetRestSeconds || 90);
+              render();
+            });
+          });
+        }
+
+        function updateTimer() {
+          timerReadout.textContent = formatTime(timerRemaining);
+          timerToggle.textContent = timerRunning ? "Pause" : timerRemaining < timerTotal ? "Resume" : "Start";
+          timerBar.style.setProperty("--timer-progress", `${timerTotal ? ((timerTotal - timerRemaining) / timerTotal) * 100 : 0}%`);
+        }
+
+        function startTimer(seconds = timerRemaining) {
+          clearInterval(timerId);
+          if (!timerRunning || timerRemaining === 0) {
+            timerRemaining = seconds;
+            timerTotal = seconds;
+          }
+          timerRunning = true;
+          timerId = window.setInterval(() => {
+            timerRemaining = Math.max(0, timerRemaining - 1);
+            if (timerRemaining === 0) stopTimer();
+            updateTimer();
+          }, 1000);
+          updateTimer();
+        }
+
+        function stopTimer() {
+          clearInterval(timerId);
+          timerRunning = false;
+          updateTimer();
+        }
+
+        timerToggle.addEventListener("click", () => {
+          if (timerRunning) stopTimer();
+          else startTimer(timerRemaining || program?.sessions?.[activeSession]?.targetRestSeconds || 90);
+        });
+
+        timerAdjust.addEventListener("click", () => {
+          timerRemaining += 30;
+          timerTotal += 30;
+          updateTimer();
+        });
+
+        render();
+      })();
+    </script>
+  </body>
+</html>

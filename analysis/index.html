@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LiftLog Hard Copy Prototype</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body, iframe { width: 100%; height: 100%; margin: 0; border: 0; }
+      body { overflow: hidden; background: #111; }
+      iframe { display: block; background: white; }
+      .switcher {
+        position: fixed;
+        z-index: 20;
+        left: 50%;
+        bottom: max(12px, env(safe-area-inset-bottom));
+        transform: translateX(-50%);
+        display: grid;
+        grid-template-columns: 42px minmax(170px, auto) 42px;
+        align-items: center;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,.24);
+        border-radius: 999px;
+        background: rgba(18,18,20,.94);
+        color: white;
+        box-shadow: 0 14px 40px rgba(0,0,0,.36);
+        font: 700 12px/1.2 ui-sans-serif, system-ui, sans-serif;
+        backdrop-filter: blur(14px);
+      }
+      .switcher button {
+        height: 42px;
+        border: 0;
+        background: transparent;
+        color: white;
+        cursor: pointer;
+        font-size: 19px;
+      }
+      .switcher button:hover { background: rgba(255,255,255,.1); }
+      .switcher span { padding: 0 8px; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <iframe id="prototype" title="LiftLog prototype variant"></iframe>
+    <nav class="switcher" aria-label="Prototype variants">
+      <button id="previous" aria-label="Previous variant">←</button>
+      <span id="variantLabel"></span>
+      <button id="next" aria-label="Next variant">→</button>
+    </nav>
+    <script>
+      // Three mobile-first LiftLog hard-copy variants, switchable via ?variant=.
+      const variants = [
+        { key: "a", name: "Story Mode", file: "variant-a.html" },
+        { key: "b", name: "Coach Board", file: "variant-b.html" },
+        { key: "c", name: "Notebook", file: "variant-c.html" },
+      ];
+      const params = new URLSearchParams(location.search);
+      let index = Math.max(0, variants.findIndex((item) => item.key === params.get("variant")));
+
+      function render() {
+        const variant = variants[index];
+        document.getElementById("prototype").src = variant.file;
+        document.getElementById("variantLabel").textContent = `${variant.key.toUpperCase()} — ${variant.name}`;
+        params.set("variant", variant.key);
+        history.replaceState(null, "", `${location.pathname}?${params}`);
+      }
+
+      function cycle(direction) {
+        index = (index + direction + variants.length) % variants.length;
+        render();
+      }
+
+      document.getElementById("previous").addEventListener("click", () => cycle(-1));
+      document.getElementById("next").addEventListener("click", () => cycle(1));
+      addEventListener("keydown", (event) => {
+        if (event.key === "ArrowLeft") cycle(-1);
+        if (event.key === "ArrowRight") cycle(1);
+      });
+      render();
+    </script>
+  </body>
+</html>

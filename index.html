@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LiftLog Hard Copy Review</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #091118;
+        --bg-2: #0f1d27;
+        --card: rgba(14, 23, 31, 0.92);
+        --ink: #edf6f0;
+        --muted: #9cafaa;
+        --line: rgba(255, 255, 255, 0.08);
+        --accent: #58d0b2;
+        --accent-2: #e8c36c;
+        --shadow: 0 26px 80px rgba(0, 0, 0, 0.4);
+      }
+
+      * { box-sizing: border-box; }
+      html, body { width: 100%; height: 100%; margin: 0; }
+      body {
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 10% 0%, rgba(88, 208, 178, 0.16), transparent 18%),
+          radial-gradient(circle at 100% 10%, rgba(232, 195, 108, 0.12), transparent 18%),
+          linear-gradient(180deg, var(--bg), var(--bg-2));
+        font-family: "Trebuchet MS", "Gill Sans", sans-serif;
+        overflow: hidden;
+      }
+
+      .shell {
+        display: grid;
+        grid-template-rows: auto auto 1fr;
+        width: 100%;
+        height: 100%;
+        gap: 10px;
+        padding: 12px;
+      }
+
+      .header,
+      .set-switcher {
+        border: 1px solid var(--line);
+        background: var(--card);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(16px);
+      }
+
+      .header {
+        border-radius: 24px;
+        padding: 14px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        gap: 16px;
+      }
+
+      .kicker {
+        margin: 0 0 6px;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        font: 800 10px/1.2 "Trebuchet MS", "Gill Sans", sans-serif;
+      }
+
+      h1, p { margin: 0; }
+
+      h1 {
+        font-size: clamp(1.3rem, 3.8vw, 2rem);
+        letter-spacing: -0.04em;
+        line-height: 1.1;
+      }
+
+      .lede {
+        margin-top: 4px;
+        color: var(--muted);
+        font: 500 0.92rem/1.45 "Trebuchet MS", "Gill Sans", sans-serif;
+        max-width: 58ch;
+      }
+
+      .meta {
+        display: grid;
+        gap: 8px;
+        text-align: right;
+        color: var(--muted);
+        font: 700 0.72rem/1.3 "Trebuchet MS", "Gill Sans", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .meta strong {
+        display: block;
+        color: var(--ink);
+        font-size: 1rem;
+        text-transform: none;
+        letter-spacing: -0.02em;
+      }
+
+      .set-switcher {
+        border-radius: 20px;
+        padding: 10px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .set-switcher__row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .set-switcher button {
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.04);
+        color: var(--ink);
+        border-radius: 999px;
+        padding: 10px 14px;
+        font: 800 0.78rem/1 "Trebuchet MS", "Gill Sans", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .set-switcher button.is-active {
+        background: rgba(88, 208, 178, 0.16);
+        border-color: rgba(88, 208, 178, 0.28);
+        color: #eaf9f3;
+      }
+
+      .set-switcher p {
+        color: var(--muted);
+        font: 500 0.88rem/1.45 "Trebuchet MS", "Gill Sans", sans-serif;
+      }
+
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        border-radius: 28px;
+        background: #fff;
+        box-shadow: var(--shadow);
+      }
+
+      @media (max-width: 720px) {
+        body { overflow: auto; }
+        .shell { height: auto; min-height: 100%; }
+        iframe { min-height: 82vh; }
+        .header { flex-direction: column; }
+        .meta { text-align: left; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="header">
+        <div>
+          <p class="kicker">LiftLog hard copy review</p>
+          <h1>Two spikes, one review surface</h1>
+          <p class="lede">
+            Pick the set on top, then use the inner variant controls inside the embedded page.
+            Both implementations are preserved side by side so nothing gets lost.
+          </p>
+        </div>
+        <aside class="meta">
+          <strong id="current-set">Analysis set</strong>
+          <span id="current-note">3 variants, analysis-driven story and charts</span>
+        </aside>
+      </header>
+
+      <section class="set-switcher" aria-label="Prototype set selector">
+        <div class="set-switcher__row">
+          <button type="button" data-set="analysis">Analysis Set</button>
+          <button type="button" data-set="classic">Classic Set</button>
+        </div>
+        <p>
+          Analysis set: the richer backup story and charts. Classic set: the earlier 3-variant hard-copy spike.
+        </p>
+      </section>
+
+      <iframe id="prototype" title="LiftLog prototype set"></iframe>
+    </main>
+
+    <script>
+      const sets = {
+        analysis: {
+          label: "Analysis set",
+          note: "3 variants, analysis-driven story and charts",
+          path: "analysis/index.html",
+        },
+        classic: {
+          label: "Classic set",
+          note: "3 variants, earlier tested hard-copy spike",
+          path: "classic/index.html",
+        },
+      };
+
+      const params = new URLSearchParams(location.search);
+      const state = {
+        set: params.get("set") === "classic" ? "classic" : "analysis",
+        variant: params.get("variant") || "a",
+      };
+
+      const frame = document.getElementById("prototype");
+      const currentSet = document.getElementById("current-set");
+      const currentNote = document.getElementById("current-note");
+      const buttons = [...document.querySelectorAll("[data-set]")];
+
+      function render() {
+        const selected = sets[state.set];
+        frame.src = `${selected.path}?variant=${encodeURIComponent(state.variant)}`;
+        currentSet.textContent = selected.label;
+        currentNote.textContent = selected.note;
+        buttons.forEach((button) => {
+          button.classList.toggle("is-active", button.dataset.set === state.set);
+        });
+        params.set("set", state.set);
+        params.set("variant", state.variant);
+        history.replaceState(null, "", `${location.pathname}?${params.toString()}`);
+      }
+
+      buttons.forEach((button) => {
+        button.addEventListener("click", () => {
+          state.set = button.dataset.set;
+          render();
+        });
+      });
+
+      render();
+    </script>
+  </body>
+</html>

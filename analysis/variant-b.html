@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LiftLog Hard Copy - Coach Board</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #091118;
+        --bg-2: #0f1d27;
+        --card: rgba(14, 23, 31, 0.9);
+        --card-strong: #101b24;
+        --ink: #edf6f0;
+        --muted: #93a8a1;
+        --line: rgba(255, 255, 255, 0.08);
+        --accent: #58d0b2;
+        --accent-2: #e8c36c;
+        --good: #58d0b2;
+        --warn: #e8c36c;
+        --bad: #d47b82;
+        --shadow: 0 26px 80px rgba(0, 0, 0, 0.42);
+      }
+
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 10% 0%, rgba(88, 208, 178, 0.16), transparent 18%),
+          radial-gradient(circle at 100% 10%, rgba(232, 195, 108, 0.12), transparent 18%),
+          linear-gradient(180deg, var(--bg), var(--bg-2));
+        font-family: "Trebuchet MS", "Gill Sans", sans-serif;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+        background-size: 100% 26px, 26px 100%;
+        opacity: 0.35;
+      }
+
+      .page {
+        position: relative;
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 16px 16px 180px;
+      }
+
+      .hero,
+      .panel,
+      .session-summary {
+        border: 1px solid var(--line);
+        background: var(--card);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(16px);
+      }
+
+      .hero {
+        border-radius: 28px;
+        padding: 18px;
+        display: grid;
+        gap: 16px;
+      }
+
+      .eyebrow,
+      .kicker {
+        margin: 0 0 8px;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        font: 800 10.5px/1.2 "Trebuchet MS", "Gill Sans", sans-serif;
+      }
+
+      h1, h2, h3, p { margin: 0; }
+
+      h1 {
+        font-size: clamp(2.1rem, 10vw, 4.4rem);
+        line-height: 0.95;
+        letter-spacing: -0.06em;
+        max-width: 7ch;
+      }
+
+      .lead {
+        margin-top: 12px;
+        max-width: 52ch;
+        color: var(--muted);
+        font: 500 0.98rem/1.65 "Trebuchet MS", "Gill Sans", sans-serif;
+      }
+
+      .hero-aside {
+        display: grid;
+        gap: 12px;
+      }
+
+      .hero-card {
+        border-radius: 22px;
+        padding: 16px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .hero-card strong {
+        display: block;
+        font-size: clamp(2rem, 8vw, 3rem);
+        line-height: 1;
+        margin-bottom: 4px;
+      }
+
+      .hero-card span {
+        color: var(--muted);
+        font: 700 0.8rem/1.5 "Trebuchet MS", "Gill Sans", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .stat {
+        padding: 14px;
+        border-radius: 18px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.03);
+      }
+
+      .stat strong {
+        display: block;
+        font-size: 1.35rem;
+        line-height: 1.1;
+        margin-bottom: 5px;
+      }
+
+      .stat span {
+        color: var(--muted);
+        font: 700 0.75rem/1.4 "Trebuchet MS", "Gill Sans", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+
+      .deck {
+        display: grid;
+        gap: 12px;
+        margin-top: 14px;
+      }
+
+      .panel {
+        border-radius: 24px;
+        padding: 16px;
+        display: grid;
+        gap: 14px;
+      }
+
+      .panel-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: end;
+      }
+
+      .panel-head h2 {
+        font-size: 1.02rem;
+        letter-spacing: -0.03em;
+      }
+
+      .panel-head p {
+        color: var(--muted);
+        font: 700 0.78rem/1.4 "Trebuchet MS", "Gill Sans", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+
+      .analytics-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .analytics-card {
+        border-radius: 20px;
+        padding: 14px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .analytics-card strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.95rem;
+      }
+
+      .analytics-card p,
+      .analytics-card li {
+        color: var(--muted);
+        font: 500 0.92rem/1.55 "Trebuchet MS", "Gill Sans", sans-serif;
+      }
+
+      .analytics-card ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      .bar-chart {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(42px, 1fr);
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+
+      .bar-group {
+        display: grid;
+        gap: 8px;
+        min-height: 180px;
+      }
+
+      .bar-wrap {
+        display: flex;
+        align-items: end;
+        min-height: 130px;
+        padding: 6px 0;
+      }
+
+      .bar {
+        width: 100%;
+        min-height: 8px;
+        border-radius: 999px 999px 8px 8px;
+        background: linear-gradient(180deg, #58d0b2, #235f51);
+        box-shadow: 0 10px 24px rgba(88, 208, 178, 0.18);
+      }
+
+      .bar-group.is-highlight .bar {
+        background: linear-gradient(180deg, #e8c36c, #8a6b21);
+      }
+
+      .bar-group.is-zero .bar {
+        background: rgba(147, 168, 161, 0.35);
+      }
+
+      .bar-meta {
+        display: grid;
+        gap: 4px;
+        justify-items: center;
+        color: var(--muted);
+        font: 600 0.72rem/1.1 "Trebuchet MS", "Gill Sans", sans-serif;
+      }
+
+      .bar-meta strong {
+        color: var(--ink);
+        font-size: 0.82rem;
+      }
+
+      .summary-split {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .summary-split .stat {
+        background: rgba(255,255,255,0.035);
+      }
+
+      .trend-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .trend-card {
+        border-radius: 20px;
+        padding: 14px;
+        background: rgba(255,255,255,0.035);
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .trend-card.is-up { border-color: rgba(88, 208, 178, 0.16); }
+      .trend-card.is-mixed { border-color: rgba(232, 195, 108, 0.16); }
+      .trend-card.is-down { border-color: rgba(212, 123, 130, 0.16); }
+
+      .trend-card__head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+
+      .trend-pill {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: rgba(88, 208, 178, 0.12);
+        color: var(--accent);
+        font: 800 0.7rem/1 "Trebuchet MS", "Gill Sans", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .trend-card strong {
+        text-align: right;
+        font-size: 0.96rem;
+        line-height: 1.2;
+      }
+
+      .trend-card__stats {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+        color: var(--muted);
+        font: 600 0.8rem/1.4 "Trebuchet MS", "Gill Sans", sans-serif;
+      }
+
+      .trend-card__bar {
+        height: 10px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(255,255,255,0.06);
+        margin-bottom: 8px;
+      }
+
+      .trend-card__bar span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--accent), #89e0cd);
+      }
+
+      .trend-card.is-up .trend-card__bar span {
+        background: linear-gradient(90deg, var(--good), #89e0cd);
+      }
+      .trend-card.is-mixed .trend-card__bar span {
+        background: linear-gradient(90deg, var(--warn), #f2dca0);
+      }
+      .trend-card.is-down .trend-card__bar span {
+        background: linear-gradient(90deg, var(--bad), #eaafb6);
+      }
+
+      .trend-card p {
+        color: var(--muted);
+        font: 500 0.92rem/1.55 "Trebuchet MS", "Gill Sans", sans-serif;
+      }
+
+      .session-summary {
+        border-radius: 24px;
+        padding: 16px;
+        display: grid;
+        gap: 14px;
+      }
+
+      .session-summary__top {
+        display: grid;
+        gap: 10px;
+      }
+
+      .session-summary__top h2 {
+        font-size: 1.4rem;
+        letter-spacing: -0.04em;
+      }
+
+      .session-summary__meta {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .session-summary__meta span {
+        padding: 5px 9px;
+        border-radius: 999px;
+        background: rgba(88, 208, 178, 0.12);
+        color: var(--accent);
+        font: 800 0.7rem/1 "Trebuchet MS", "Gill Sans", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .session-note {
+        display: grid;
+        gap: 8px;
+      }
+
+      .session-note span {
+        color: var(--muted);
+        font: 800 0.72rem/1 "Trebuchet MS", "Gill Sans", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+      }
+
+      .session-note textarea {
+        width: 100%;
+        min-height: 84px;
+        resize: vertical;
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(5, 10, 14, 0.55);
+        color: var(--ink);
+        padding: 12px 13px;
+        font: 500 0.96rem/1.55 "Trebuchet MS", "Gill Sans", sans-serif;
+        outline: none;
+      }
+
+      .exercise-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .exercise-card {
+        border-radius: 20px;
+        padding: 14px;
+        background: rgba(255,255,255,0.035);
+        border: 1px solid rgba(255,255,255,0.08);
+        display: grid;
+        gap: 10px;
+      }
+
+      .exercise-card.is-up { border-color: rgba(88, 208, 178, 0.18); }
+      .exercise-card.is-mixed { border-color: rgba(232, 195, 108, 0.18); }
+      .exercise-card.is-down { border-color: rgba(212, 123, 130, 0.2); }
+
+      .exercise-card__head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .exercise-index {
+        color: var(--accent);
+        font: 800 0.7rem/1 "Trebuchet MS", "Gill Sans", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        margin-bottom: 4px;
+      }
+
+      .exercise-card h3 {
+        font-size: 1rem;
+        line-height: 1.25;
+        letter-spacing: -0.03em;
+      }
+
+      .exercise-trend {
+        flex: 0 0 auto;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: rgba(88, 208, 178, 0.12);
+        color: var(--accent);
+        font: 800 0.72rem/1 "Trebuchet MS", "Gill Sans", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .exercise-card__meta {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        color: var(--muted);
+        font: 700 0.72rem/1.3 "Trebuchet MS", "Gill Sans", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .set-strip {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+      }
+
+      .set-chip {
+        padding: 10px 10px 9px;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.045);
+        border: 1px solid rgba(255,255,255,0.08);
+        display: grid;
+        gap: 3px;
+      }
+
+      .set-chip span {
+        color: var(--muted);
+        font: 800 0.68rem/1 "Trebuchet MS", "Gill Sans", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .set-chip strong {
+        font-size: 0.98rem;
+      }
+
+      .set-chip small {
+        color: var(--muted);
+        font: 600 0.76rem/1 "Trebuchet MS", "Gill Sans", sans-serif;
+      }
+
+      .rep-editor {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+        gap: 8px;
+      }
+
+      .rep-editor label {
+        display: grid;
+        gap: 6px;
+      }
+
+      .rep-editor span {
+        color: var(--muted);
+        font: 800 0.68rem/1 "Trebuchet MS", "Gill Sans", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .rep-editor input {
+        width: 100%;
+        border-radius: 13px;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.04);
+        color: var(--ink);
+        padding: 10px 11px;
+        font: 700 0.98rem/1 "Trebuchet MS", "Gill Sans", sans-serif;
+        text-align: center;
+      }
+
+      .exercise-note {
+        color: var(--muted);
+        font: 500 0.9rem/1.55 "Trebuchet MS", "Gill Sans", sans-serif;
+      }
+
+      .sequence {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+
+      .sequence-chip {
+        flex: 0 0 auto;
+        min-width: 92px;
+        border-radius: 999px;
+        padding: 10px 12px;
+        background: rgba(255,255,255,0.035);
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .sequence-chip strong {
+        display: block;
+        margin-bottom: 3px;
+        font-size: 0.94rem;
+      }
+
+      .sequence-chip span {
+        color: var(--muted);
+        font: 800 0.68rem/1 "Trebuchet MS", "Gill Sans", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .tabs {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .session-tab {
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 16px;
+        background: rgba(255,255,255,0.035);
+        padding: 10px 8px;
+        display: grid;
+        gap: 4px;
+        text-align: left;
+        min-height: 82px;
+      }
+
+      .session-tab span {
+        font: 800 0.86rem/1.1 "Trebuchet MS", "Gill Sans", sans-serif;
+      }
+
+      .session-tab strong,
+      .session-tab small {
+        color: var(--muted);
+        font: 700 0.68rem/1.2 "Trebuchet MS", "Gill Sans", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .session-tab.is-active {
+        background: linear-gradient(180deg, rgba(88, 208, 178, 0.18), rgba(255,255,255,0.045));
+        border-color: rgba(88, 208, 178, 0.22);
+        box-shadow: 0 14px 30px rgba(88, 208, 178, 0.1);
+      }
+
+      .footer-timer {
+        margin-top: 14px;
+      }
+
+      .rest-timer {
+        display: grid;
+        grid-template-columns: 76px minmax(0, 1fr);
+        gap: 12px;
+        align-items: center;
+        border-radius: 24px;
+        padding: 14px;
+        background: rgba(9, 15, 20, 0.95);
+        color: #eef8f3;
+        box-shadow: 0 18px 50px rgba(0,0,0,0.38);
+        border: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .rest-timer__ring svg {
+        width: 76px;
+        height: 76px;
+        transform: rotate(-90deg);
+      }
+
+      .ring-track,
+      .ring-progress {
+        fill: none;
+        stroke-width: 10;
+      }
+
+      .ring-track { stroke: rgba(255,255,255,0.1); }
+      .ring-progress {
+        stroke: #58d0b2;
+        stroke-linecap: round;
+      }
+
+      .rest-timer__body strong {
+        display: block;
+        font-size: 1.9rem;
+        line-height: 1;
+        margin: 2px 0 4px;
+      }
+
+      .rest-timer__body span {
+        color: rgba(238,248,243,0.7);
+        font: 700 0.72rem/1 "Trebuchet MS", "Gill Sans", sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      .rest-timer__controls {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .rest-timer button {
+        border: 0;
+        border-radius: 14px;
+        padding: 10px 8px;
+        background: rgba(255,255,255,0.06);
+        color: #eef8f3;
+        font: 800 0.74rem/1 "Trebuchet MS", "Gill Sans", sans-serif;
+      }
+
+      .rest-timer button[data-timer-action="toggle"] {
+        background: #58d0b2;
+        color: #07110e;
+      }
+
+      @media (min-width: 760px) {
+        .hero {
+          grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+          align-items: end;
+          padding: 24px;
+        }
+
+        .deck {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .panel--wide { grid-column: 1 / -1; }
+        .trend-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .exercise-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+
+      @media (max-width: 760px) {
+        .tabs {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .rest-timer {
+          grid-template-columns: 64px minmax(0, 1fr);
+        }
+
+        .rest-timer__controls {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div>
+          <p class="kicker">LiftLog coach board</p>
+          <h1>Phase four in motion</h1>
+          <p class="lead" id="lead-copy"></p>
+        </div>
+        <aside class="hero-aside">
+          <div class="hero-card">
+            <strong id="sessions-count">58</strong>
+            <span>workouts in the phase-four window</span>
+          </div>
+          <div class="stat-grid">
+            <div class="stat">
+              <strong id="gap-days">64</strong>
+              <span>day gap</span>
+            </div>
+            <div class="stat">
+              <strong id="rate">3.83</strong>
+              <span>sessions / week</span>
+            </div>
+            <div class="stat">
+              <strong id="span-days">107</strong>
+              <span>day run</span>
+            </div>
+            <div class="stat">
+              <strong id="most-recent">Upper</strong>
+              <span>latest routine</span>
+            </div>
+          </div>
+        </aside>
+      </header>
+
+      <div class="deck">
+        <section class="panel panel--wide">
+          <div class="panel-head">
+            <div>
+              <h2>Block overview</h2>
+              <p>Where the log slowed down, where it restarted</p>
+            </div>
+            <p id="gap-range"></p>
+          </div>
+          <div class="summary-split">
+            <div class="stat">
+              <strong>Phase 4</strong>
+              <span id="lead-stat"></span>
+            </div>
+            <div class="stat">
+              <strong>What it says</strong>
+              <span id="signal-stat"></span>
+            </div>
+          </div>
+          <div id="monthly-chart"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Session split</h2>
+              <p>How the 4-day loop actually lands</p>
+            </div>
+            <p>Push / pull / legs / upper</p>
+          </div>
+          <div id="split-cards" class="analytics-grid"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Signal vs drag</h2>
+              <p>What is clearly improving, what is not</p>
+            </div>
+            <p>Best movers first</p>
+          </div>
+          <div id="trend-cards"></div>
+        </section>
+
+        <section class="panel panel--wide">
+          <div class="panel-head">
+            <div>
+              <h2>Recent sequence</h2>
+              <p>Last 13 sessions before the snapshot</p>
+            </div>
+            <p>1 week rhythm in chips</p>
+          </div>
+          <div id="recent-sequence" class="sequence"></div>
+        </section>
+
+        <section class="panel panel--wide">
+          <div class="panel-head">
+            <div>
+              <h2>Workout sheet</h2>
+              <p id="active-session-label"></p>
+            </div>
+            <p id="active-meta"></p>
+          </div>
+          <nav id="session-tabs" class="tabs" aria-label="Workout routines"></nav>
+          <div id="session-sheet"></div>
+        </section>
+      </div>
+
+      <div class="footer-timer" id="timer"></div>
+    </main>
+
+    <script src="workout-data.js"></script>
+    <script src="analysis-data.js"></script>
+    <script src="shared.js"></script>
+    <script>
+      const state = { session: "Upper" };
+      const tabs = document.getElementById("session-tabs");
+      const sheet = document.getElementById("session-sheet");
+      const activeSessionLabel = document.getElementById("active-session-label");
+      const activeMeta = document.getElementById("active-meta");
+
+      document.getElementById("lead-copy").textContent = LiftLog.insights.story.lead;
+      document.getElementById("gap-days").textContent = LiftLog.insights.summary.gapDays;
+      document.getElementById("rate").textContent = LiftLog.insights.summary.sessionsPerWeek.toFixed(2);
+      document.getElementById("span-days").textContent = LiftLog.insights.summary.phaseFourSpanDays;
+      document.getElementById("sessions-count").textContent = LiftLog.insights.summary.phaseFourSessions;
+      document.getElementById("most-recent").textContent = LiftLog.insights.sessionSplit[3].name;
+      document.getElementById("gap-range").textContent = `${LiftLog.insights.summary.gapStart} to ${LiftLog.insights.summary.gapEnd}`;
+      document.getElementById("lead-stat").textContent = `${LiftLog.insights.summary.phaseFourSessions} workouts across 4 sessions`;
+      document.getElementById("signal-stat").textContent = "Load is up faster than clean volume on several lifts.";
+      document.getElementById("monthly-chart").innerHTML = LiftLog.renderMonthlyChart(LiftLog.insights.phaseFourMonthlyCounts, {
+        label: "Phase four workout count by month",
+      });
+      document.getElementById("split-cards").innerHTML = LiftLog.insights.sessionSplit
+        .map(
+          (item) => `
+            <article class="analytics-card">
+              <strong>${LiftLog.escapeHtml(item.name)}</strong>
+              <p>${item.count} logged runs, last on ${LiftLog.formatShortDate(item.lastDate)}.</p>
+            </article>
+          `
+        )
+        .join("");
+      document.getElementById("trend-cards").innerHTML = LiftLog.renderTrendCards(
+        LiftLog.insights.trendCards,
+        { metric: "deltaBestWeight" }
+      );
+      document.getElementById("recent-sequence").innerHTML = LiftLog.insights.recentSequence
+        .map(
+          (item) => `
+            <div class="sequence-chip">
+              <strong>${LiftLog.escapeHtml(item.name)}</strong>
+              <span>${LiftLog.formatShortDate(item.date)}</span>
+            </div>
+          `
+        )
+        .join("");
+
+      function renderSheet() {
+        tabs.innerHTML = LiftLog.renderSessionTabs(state.session);
+        sheet.innerHTML = LiftLog.renderSessionSummary(state.session);
+        activeSessionLabel.textContent = `Showing ${state.session}`;
+        const session = LiftLog.getSession(state.session);
+        const meta = LiftLog.insights.sessionSplit.find((item) => item.name === state.session);
+        activeMeta.textContent = meta ? `${meta.count} sessions • last ${LiftLog.formatShortDate(meta.lastDate)}` : `${session.exercises.length} exercises`;
+        LiftLog.bindLocalEditors(sheet);
+      }
+
+      tabs.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-session-tab]");
+        if (!button) return;
+        state.session = button.dataset.sessionTab;
+        renderSheet();
+      });
+
+      renderSheet();
+      LiftLog.mountTimer(document.getElementById("timer"));
+    </script>
+  </body>
+</html>

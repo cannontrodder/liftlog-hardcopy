@@ -1,0 +1,11 @@
+{
+  "name": "liftlog-hardcopy-spike",
+  "private": true,
+  "scripts": {
+    "start": "node serve.js",
+    "test:mobile": "playwright test playwright-smoke.spec.js"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
+  }
+}

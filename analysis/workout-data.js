@@ -1,0 +1,63 @@
+window.WORKOUT_DATA = {
+  name: "Kyle Phase 4",
+  backupDate: "2026-06-12",
+  sessions: [
+    {
+      name: "Push",
+      targetRestSeconds: 90,
+      lastDate: "2026-06-08",
+      exercises: [
+        { name: "Incline Dumbbell Press", sets: 2, repsPerSet: 10, last: [{ weight: "25", reps: 6 }, { weight: "25", reps: 4 }] },
+        { name: "Dumbbell Shoulder Press", sets: 2, repsPerSet: 10, last: [{ weight: "17.5", reps: 5 }, { weight: "17.5", reps: 4 }] },
+        { name: "Dip Machine", sets: 2, repsPerSet: 12, last: [{ weight: "120", reps: 7 }, { weight: "120", reps: 6 }] },
+        { name: "Cable Decline Chest Fly", sets: 2, repsPerSet: 15, last: [{ weight: "60", reps: 11 }, { weight: "65", reps: 6 }] },
+        { name: "Cable Lateral Raise", sets: 2, repsPerSet: 15, last: [{ weight: "30", reps: 6 }, { weight: "30", reps: 4 }] },
+        { name: "Triceps Pushdown - Rope Attachment", sets: 2, repsPerSet: 12, last: [{ weight: "80", reps: 6 }, { weight: "80", reps: 6 }] },
+        { name: "Machine Triceps Extension (drop sets)", sets: 4, repsPerSet: 12, last: [{ weight: "50", reps: 6 }, { weight: "40", reps: 11 }, { weight: "35", reps: 13 }, { weight: "35", reps: 8 }] }
+      ]
+    },
+    {
+      name: "Pull",
+      targetRestSeconds: 90,
+      lastDate: "2026-06-09",
+      exercises: [
+        { name: "Wide-Grip Lat Pulldown", sets: 2, repsPerSet: 10, last: [{ weight: "70", reps: 10 }, { weight: "75", reps: 9 }] },
+        { name: "T-Bar Row with Handle each side independent", sets: 2, repsPerSet: 10, last: [{ weight: "30", reps: 8 }, { weight: "32.5", reps: 7 }] },
+        { name: "Lying T-Bar Row", sets: 2, repsPerSet: 10, last: [{ weight: "65", reps: 6 }, { weight: "65", reps: 5 }] },
+        { name: "Reverse Flyes", sets: 2, repsPerSet: 15, last: [{ weight: "20", reps: 8 }, { weight: "20", reps: 7 }] },
+        { name: "Dumbbell Shrug", sets: 2, repsPerSet: 12, last: [{ weight: "37.5", reps: 8 }, { weight: "40", reps: 8 }] },
+        { name: "Machine Preacher Curls", sets: 2, repsPerSet: 12, last: [{ weight: "27.5", reps: 8 }, { weight: "30", reps: 4 }] },
+        { name: "Hammer Curls", sets: 2, repsPerSet: 12, last: [{ weight: "20", reps: 6 }, { weight: "20", reps: 4 }] }
+      ]
+    },
+    {
+      name: "Legs",
+      targetRestSeconds: 90,
+      lastDate: "2026-06-04",
+      exercises: [
+        { name: "Lying Leg Curls", sets: 2, repsPerSet: 12, last: [{ weight: "17.5", reps: 9 }, { weight: "20", reps: 6 }] },
+        { name: "Goblet Squat", sets: 2, repsPerSet: 10, last: [{ weight: "87.5", reps: 12 }, { weight: "90", reps: 9 }] },
+        { name: "Leg Press", sets: 2, repsPerSet: 10, last: [{ weight: "100", reps: 6 }, { weight: "80", reps: 5 }] },
+        { name: "Leg Extensions", sets: 2, repsPerSet: 15, last: [{ weight: "65", reps: 10 }, { weight: "67.5", reps: 9 }] },
+        { name: "Thigh Abductor", sets: 2, repsPerSet: 15, last: [{ weight: "75", reps: 9 }, { weight: "77.5", reps: 7 }] },
+        { name: "Seated Calf Raise", sets: 2, repsPerSet: 10, last: [{ weight: "62.5", reps: 7 }, { weight: "62.5", reps: 8 }] },
+        { name: "Ab Crunch Machine", sets: 3, repsPerSet: 12, last: [{ weight: "82.5", reps: 12 }, { weight: "82.5", reps: 8 }, { weight: "82.5", reps: 8 }] }
+      ]
+    },
+    {
+      name: "Upper",
+      targetRestSeconds: 90,
+      lastDate: "2026-06-11",
+      exercises: [
+        { name: "Barbell Bench Press - Medium Grip", sets: 2, repsPerSet: 10, last: [{ weight: "60", reps: 7 }, { weight: "60", reps: 6 }] },
+        { name: "Seated Cable Rows", sets: 2, repsPerSet: 10, last: [{ weight: "80", reps: 8 }, { weight: "85", reps: 5 }] },
+        { name: "Smith Machine Overhead Shoulder Press", sets: 2, repsPerSet: 12, last: [{ weight: "45", reps: 8 }, { weight: "50", reps: 5 }] },
+        { name: "Chest Fly (machine)", sets: 2, repsPerSet: 15, last: [{ weight: "88", reps: 8 }, { weight: "88", reps: 6 }] },
+        { name: "Wide-Grip Pull-Up", sets: 2, repsPerSet: 12, last: [{ weight: "0", reps: 5 }, { weight: "0", reps: 3 }] },
+        { name: "Lateral deltoids", sets: 2, repsPerSet: 12, last: [{ weight: "20", reps: 5 }, { weight: "20", reps: 5 }] },
+        { name: "Machine Bicep Curl", sets: 2, repsPerSet: 15, last: [{ weight: "65", reps: 10 }, { weight: "67.5", reps: 7 }] },
+        { name: "Machine Triceps Extension", sets: 2, repsPerSet: 15, last: [{ weight: "55", reps: 7 }, { weight: "55", reps: 5 }] }
+      ]
+    }
+  ]
+};
