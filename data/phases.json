@@ -1,0 +1,1900 @@
+{
+  "Kyle phase 1": [
+    {
+      "name": "Upper A 60 mins",
+      "targetRestSeconds": 90,
+      "lastDate": null,
+      "exercises": [
+        {
+          "name": "Dumbbell Incline Bench Press",
+          "sets": 2,
+          "repsPerSet": 12,
+          "last": []
+        },
+        {
+          "name": "Lat Machine Wide Grip Pulldown",
+          "sets": 2,
+          "repsPerSet": 12,
+          "last": []
+        },
+        {
+          "name": "Dumbbell Seated Shoulder Press",
+          "sets": 2,
+          "repsPerSet": 12,
+          "last": []
+        },
+        {
+          "name": "Cable Seated Row",
+          "sets": 2,
+          "repsPerSet": 12,
+          "last": []
+        },
+        {
+          "name": "Standing Multi Flight",
+          "sets": 2,
+          "repsPerSet": 12,
+          "last": []
+        },
+        {
+          "name": "Machine Preacher Curl",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": []
+        },
+        {
+          "name": "Machine Tricep Pushdowns",
+          "sets": 2,
+          "repsPerSet": 12,
+          "last": []
+        },
+        {
+          "name": "Cable Seated Chest Fly",
+          "sets": 3,
+          "repsPerSet": 10,
+          "last": []
+        }
+      ]
+    },
+    {
+      "name": "Lower A 40 mins",
+      "targetRestSeconds": 90,
+      "lastDate": "2025-09-30",
+      "exercises": [
+        {
+          "name": "Seated Leg Press",
+          "sets": 3,
+          "repsPerSet": 9,
+          "last": [
+            {
+              "weight": "40",
+              "reps": 29
+            },
+            {
+              "weight": "60",
+              "reps": 10
+            },
+            {
+              "weight": "30",
+              "reps": 19
+            }
+          ]
+        },
+        {
+          "name": "Machine Seated Leg Extensions",
+          "sets": 2,
+          "repsPerSet": 13,
+          "last": [
+            {
+              "weight": "42.5",
+              "reps": 10
+            },
+            {
+              "weight": "42.5",
+              "reps": 12
+            }
+          ]
+        },
+        {
+          "name": "Hamstring Curl ",
+          "sets": 2,
+          "repsPerSet": 11,
+          "last": [
+            {
+              "weight": "20",
+              "reps": 12
+            },
+            {
+              "weight": "20",
+              "reps": 8
+            }
+          ]
+        },
+        {
+          "name": "Dumbbell Walking Lunge",
+          "sets": 2,
+          "repsPerSet": 11,
+          "last": [
+            {
+              "weight": "10",
+              "reps": 8
+            },
+            {
+              "weight": "10",
+              "reps": 11
+            }
+          ]
+        },
+        {
+          "name": "Machine Seated Calf Raise",
+          "sets": 2,
+          "repsPerSet": 9,
+          "last": [
+            {
+              "weight": "30",
+              "reps": 11
+            },
+            {
+              "weight": "30",
+              "reps": 11
+            }
+          ]
+        },
+        {
+          "name": "Machine Standing Calf Raise",
+          "sets": 2,
+          "repsPerSet": 11,
+          "last": [
+            {
+              "weight": "12.5",
+              "reps": 15
+            },
+            {
+              "weight": "12.5",
+              "reps": 12
+            }
+          ]
+        },
+        {
+          "name": "Seated Ab Crunch",
+          "sets": 3,
+          "repsPerSet": 9,
+          "last": [
+            {
+              "weight": "67.5",
+              "reps": 19
+            },
+            {
+              "weight": "70",
+              "reps": 14
+            },
+            {
+              "weight": "70",
+              "reps": 8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Upper B 35 mins",
+      "targetRestSeconds": 90,
+      "lastDate": "2025-10-01",
+      "exercises": [
+        {
+          "name": "Machine Seated Dip",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "90",
+              "reps": 17
+            },
+            {
+              "weight": "90",
+              "reps": 12
+            }
+          ]
+        },
+        {
+          "name": "Circular Row",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "50",
+              "reps": 12
+            },
+            {
+              "weight": "50",
+              "reps": 8
+            }
+          ]
+        },
+        {
+          "name": "Dumbbell Seated Shoulder Press",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "15",
+              "reps": 12
+            },
+            {
+              "weight": "15",
+              "reps": 8
+            }
+          ]
+        },
+        {
+          "name": "Decline Chest Fly Machine",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "40",
+              "reps": 13
+            },
+            {
+              "weight": "40",
+              "reps": 12
+            }
+          ]
+        },
+        {
+          "name": "Standing Multi Flight",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "45",
+              "reps": 11
+            },
+            {
+              "weight": "45",
+              "reps": 9
+            }
+          ]
+        },
+        {
+          "name": "Barbell Bicep Curl",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "28",
+              "reps": 11
+            },
+            {
+              "weight": "28",
+              "reps": 4
+            }
+          ]
+        },
+        {
+          "name": "Machine Tricep Pushdowns",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "40",
+              "reps": 10
+            },
+            {
+              "weight": "40",
+              "reps": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Lower B 32 mins",
+      "targetRestSeconds": 90,
+      "lastDate": "2025-10-02",
+      "exercises": [
+        {
+          "name": "Barbell RDL",
+          "sets": 3,
+          "repsPerSet": 11,
+          "last": [
+            {
+              "weight": "40",
+              "reps": 15
+            },
+            {
+              "weight": "50",
+              "reps": 13
+            },
+            {
+              "weight": "50",
+              "reps": 15
+            }
+          ]
+        },
+        {
+          "name": "Laying Hamstring Curl",
+          "sets": 2,
+          "repsPerSet": 11,
+          "last": [
+            {
+              "weight": "20",
+              "reps": 10
+            },
+            {
+              "weight": "20",
+              "reps": 9
+            }
+          ]
+        },
+        {
+          "name": "Machine Seated Leg Extension",
+          "sets": 2,
+          "repsPerSet": 13,
+          "last": [
+            {
+              "weight": "45",
+              "reps": 14
+            },
+            {
+              "weight": "45",
+              "reps": 13
+            }
+          ]
+        },
+        {
+          "name": "Machine Seated Abduction",
+          "sets": 2,
+          "repsPerSet": 13,
+          "last": [
+            {
+              "weight": "55",
+              "reps": 12
+            },
+            {
+              "weight": "55",
+              "reps": 12
+            }
+          ]
+        },
+        {
+          "name": "Cable Low High Chop LR",
+          "sets": 2,
+          "repsPerSet": 11,
+          "last": [
+            {
+              "weight": "30",
+              "reps": 8
+            },
+            {
+              "weight": "30",
+              "reps": 8
+            }
+          ]
+        },
+        {
+          "name": "Cable Low High Chop RL",
+          "sets": 2,
+          "repsPerSet": 11,
+          "last": [
+            {
+              "weight": "40",
+              "reps": 7
+            },
+            {
+              "weight": "40",
+              "reps": 8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Upper C 21 mins",
+      "targetRestSeconds": 90,
+      "lastDate": "2025-09-19",
+      "exercises": [
+        {
+          "name": "Dumbbell Incline Bench Press",
+          "sets": 2,
+          "repsPerSet": 13,
+          "last": [
+            {
+              "weight": "17.5",
+              "reps": 11
+            },
+            {
+              "weight": "17.5",
+              "reps": 8
+            }
+          ]
+        },
+        {
+          "name": "Lat Machine Wide Grip Pulldown",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "60",
+              "reps": 13
+            },
+            {
+              "weight": "65",
+              "reps": 6
+            }
+          ]
+        },
+        {
+          "name": "Dumbbell Seated Shoulder Press",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "15",
+              "reps": 9
+            },
+            {
+              "weight": "15",
+              "reps": 9
+            }
+          ]
+        },
+        {
+          "name": "Cable Seated Chest Fly",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "61",
+              "reps": 11
+            },
+            {
+              "weight": "61",
+              "reps": 7
+            }
+          ]
+        },
+        {
+          "name": "Cable Seated Row",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "55",
+              "reps": 13
+            },
+            {
+              "weight": "55",
+              "reps": 11
+            }
+          ]
+        },
+        {
+          "name": "Standing Multi Flight",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "40",
+              "reps": 13
+            },
+            {
+              "weight": "40",
+              "reps": 12
+            }
+          ]
+        },
+        {
+          "name": "Machine Preacher Curl",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "17.5",
+              "reps": 13
+            },
+            {
+              "weight": "17.5",
+              "reps": 7
+            }
+          ]
+        },
+        {
+          "name": "Seated Ab Crunch",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "62.5",
+              "reps": 21
+            },
+            {
+              "weight": "65",
+              "reps": 16
+            }
+          ]
+        },
+        {
+          "name": "Machine Tricep Pushdowns",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "50",
+              "reps": 10
+            },
+            {
+              "weight": "50",
+              "reps": 10
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "All Body",
+      "targetRestSeconds": 90,
+      "lastDate": "2025-09-27",
+      "exercises": [
+        {
+          "name": "Incline Chest Press",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "40",
+              "reps": 8
+            },
+            {
+              "weight": "40",
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "name": "Lat Machine Wide Grip Pulldown",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "60",
+              "reps": 12
+            },
+            {
+              "weight": "60",
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "name": "Standing Multi Flight",
+          "sets": 1,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "40",
+              "reps": 15
+            }
+          ]
+        },
+        {
+          "name": "Cable Seated Chest Fly",
+          "sets": 1,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "61",
+              "reps": 12
+            }
+          ]
+        },
+        {
+          "name": "Cable Seated Row",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "55",
+              "reps": 10
+            },
+            {
+              "weight": "55",
+              "reps": 9
+            }
+          ]
+        },
+        {
+          "name": "Bodyweight walking lunges",
+          "sets": 2,
+          "repsPerSet": 15,
+          "last": [
+            {
+              "weight": "0",
+              "reps": 15
+            },
+            {
+              "weight": "0",
+              "reps": 15
+            }
+          ]
+        },
+        {
+          "name": "Laying Hamstring Curl",
+          "sets": 1,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "20",
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "name": "Seated Leg Press",
+          "sets": 2,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "40",
+              "reps": 12
+            },
+            {
+              "weight": "40",
+              "reps": 12
+            }
+          ]
+        },
+        {
+          "name": "Machine Seated Leg Extensions",
+          "sets": 1,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "45",
+              "reps": 10
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "Kyle phase 2": [
+    {
+      "name": "Upper 1",
+      "targetRestSeconds": 90,
+      "lastDate": "2025-11-10",
+      "exercises": [
+        {
+          "name": "Barbell Incline Bench Press",
+          "sets": 4,
+          "repsPerSet": 8,
+          "last": [
+            {
+              "weight": "45",
+              "reps": 10
+            },
+            {
+              "weight": "45",
+              "reps": 10
+            },
+            {
+              "weight": "45",
+              "reps": 7
+            },
+            {
+              "weight": "45",
+              "reps": 7
+            }
+          ]
+        },
+        {
+          "name": "Lat Machine Wide Bar Close Pulldown",
+          "sets": 4,
+          "repsPerSet": 8,
+          "last": [
+            {
+              "weight": "65",
+              "reps": 9
+            },
+            {
+              "weight": "65",
+              "reps": 7
+            },
+            {
+              "weight": "65",
+              "reps": 5
+            },
+            {
+              "weight": "65",
+              "reps": 5
+            }
+          ]
+        },
+        {
+          "name": "Decline Chest Fly Machine",
+          "sets": 3,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "55",
+              "reps": 11
+            },
+            {
+              "weight": "55",
+              "reps": 9
+            },
+            {
+              "weight": "55",
+              "reps": 6
+            }
+          ]
+        },
+        {
+          "name": "Cable Seated Wide Row",
+          "sets": 3,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "55",
+              "reps": 11
+            },
+            {
+              "weight": "55",
+              "reps": 7
+            },
+            {
+              "weight": "55",
+              "reps": 8
+            }
+          ]
+        },
+        {
+          "name": "Standing Multi Flight",
+          "sets": 3,
+          "repsPerSet": 15,
+          "last": [
+            {
+              "weight": "50",
+              "reps": 12
+            },
+            {
+              "weight": "50",
+              "reps": 7
+            },
+            {
+              "weight": "55",
+              "reps": 8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Lower 1",
+      "targetRestSeconds": 90,
+      "lastDate": "2025-11-11",
+      "exercises": [
+        {
+          "name": "Angled Machine Sumo Leg Press",
+          "sets": 4,
+          "repsPerSet": 8,
+          "last": [
+            {
+              "weight": "110",
+              "reps": 12
+            },
+            {
+              "weight": "110",
+              "reps": 12
+            },
+            {
+              "weight": "120",
+              "reps": 14
+            },
+            {
+              "weight": "120",
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "name": "Dumbbell Walking Lunge",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "17.5",
+              "reps": 14
+            },
+            {
+              "weight": "17.5",
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "name": "Machine Seated Leg Extension",
+          "sets": 2,
+          "repsPerSet": 15,
+          "last": [
+            {
+              "weight": "52.5",
+              "reps": 11
+            },
+            {
+              "weight": "52.5",
+              "reps": 11
+            }
+          ]
+        },
+        {
+          "name": "Machine Seated Calf Raise",
+          "sets": 3,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "40",
+              "reps": 14
+            },
+            {
+              "weight": "40",
+              "reps": 11
+            },
+            {
+              "weight": "40",
+              "reps": 12
+            }
+          ]
+        },
+        {
+          "name": "Seated Machine Ab Crunch",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "82.5",
+              "reps": 18
+            },
+            {
+              "weight": "82.5",
+              "reps": 14
+            }
+          ]
+        },
+        {
+          "name": "Dip Machine Bent Leg Raise",
+          "sets": 2,
+          "repsPerSet": 20,
+          "last": [
+            {
+              "weight": "0",
+              "reps": 13
+            },
+            {
+              "weight": "0",
+              "reps": 11
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Upper 2",
+      "targetRestSeconds": 90,
+      "lastDate": "2025-11-13",
+      "exercises": [
+        {
+          "name": "Dumbbell Seated Shoulder Press",
+          "sets": 3,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "15",
+              "reps": 12
+            },
+            {
+              "weight": "15",
+              "reps": 11
+            },
+            {
+              "weight": "15",
+              "reps": 9
+            }
+          ]
+        },
+        {
+          "name": "Dumbbell Lateral Raise",
+          "sets": 2,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "50",
+              "reps": 12
+            },
+            {
+              "weight": "55",
+              "reps": 8
+            }
+          ]
+        },
+        {
+          "name": "Dumbbell Shrug",
+          "sets": 3,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "32.5",
+              "reps": 12
+            },
+            {
+              "weight": "32.5",
+              "reps": 13
+            },
+            {
+              "weight": "32.5",
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "name": "Machine Seated Reverse Fly",
+          "sets": 2,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "35",
+              "reps": 12
+            },
+            {
+              "weight": "35",
+              "reps": 11
+            }
+          ]
+        },
+        {
+          "name": "Machine Preacher Curl",
+          "sets": 3,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "22.5",
+              "reps": 12
+            },
+            {
+              "weight": "22.5",
+              "reps": 7
+            },
+            {
+              "weight": "22.5",
+              "reps": 5
+            }
+          ]
+        },
+        {
+          "name": "Cable Rope Tricep Extension",
+          "sets": 3,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "35",
+              "reps": 11
+            },
+            {
+              "weight": "35",
+              "reps": 12
+            },
+            {
+              "weight": "35",
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "name": "Barbell Bicep Curl",
+          "sets": 3,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "23",
+              "reps": 10
+            },
+            {
+              "weight": "23",
+              "reps": 7
+            },
+            {
+              "weight": "23",
+              "reps": 6
+            }
+          ]
+        },
+        {
+          "name": "Cable Straight Bar Tricep Pushdown",
+          "sets": 3,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "52.5",
+              "reps": 15
+            },
+            {
+              "weight": "55",
+              "reps": 8
+            },
+            {
+              "weight": "55",
+              "reps": 8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Lower 2",
+      "targetRestSeconds": 90,
+      "lastDate": "2025-11-14",
+      "exercises": [
+        {
+          "name": "Barbell RDL",
+          "sets": 3,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "60",
+              "reps": 12
+            },
+            {
+              "weight": "60",
+              "reps": 12
+            },
+            {
+              "weight": "60",
+              "reps": 12
+            }
+          ]
+        },
+        {
+          "name": "Dumbbell Reverse Lunge",
+          "sets": 3,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "17.5",
+              "reps": 12
+            },
+            {
+              "weight": "17.5",
+              "reps": 12
+            },
+            {
+              "weight": "17.5",
+              "reps": 12
+            }
+          ]
+        },
+        {
+          "name": "Hamstring Curl",
+          "sets": 3,
+          "repsPerSet": 15,
+          "last": [
+            {
+              "weight": "15",
+              "reps": 11
+            },
+            {
+              "weight": "15",
+              "reps": 6
+            },
+            {
+              "weight": "10",
+              "reps": 7
+            }
+          ]
+        },
+        {
+          "name": "Machine Seated Abduction",
+          "sets": 2,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "62.5",
+              "reps": 12
+            },
+            {
+              "weight": "65",
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "name": "Cable Woodchopper",
+          "sets": 4,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "60",
+              "reps": 14
+            },
+            {
+              "weight": "60",
+              "reps": 13
+            },
+            {
+              "weight": "60",
+              "reps": 13
+            },
+            {
+              "weight": "60",
+              "reps": 11
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "Kyle Phase 3": [
+    {
+      "name": "Push",
+      "targetRestSeconds": 90,
+      "lastDate": "2026-06-08",
+      "exercises": [
+        {
+          "name": "Superband Dislocates",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": []
+        },
+        {
+          "name": "Band external shoulder rotation",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": []
+        },
+        {
+          "name": "Barbell bench press",
+          "sets": 3,
+          "repsPerSet": 8,
+          "last": []
+        },
+        {
+          "name": "Barbell Seated Shoulder Press",
+          "sets": 3,
+          "repsPerSet": 8,
+          "last": []
+        },
+        {
+          "name": "Cable standing high to low fly",
+          "sets": 3,
+          "repsPerSet": 12,
+          "last": []
+        },
+        {
+          "name": "Cable Straight Bar Tricep Pushdown",
+          "sets": 3,
+          "repsPerSet": 12,
+          "last": []
+        },
+        {
+          "name": "Cable lateral raise ",
+          "sets": 3,
+          "repsPerSet": 15,
+          "last": []
+        },
+        {
+          "name": "Pushups",
+          "sets": 3,
+          "repsPerSet": 10,
+          "last": []
+        }
+      ]
+    },
+    {
+      "name": "Pull",
+      "targetRestSeconds": 90,
+      "lastDate": "2026-06-09",
+      "exercises": [
+        {
+          "name": "Machine Assisted Wide Grip Pull-up ",
+          "sets": 3,
+          "repsPerSet": 8,
+          "last": []
+        },
+        {
+          "name": "Barbell Rear Delt Row",
+          "sets": 3,
+          "repsPerSet": 8,
+          "last": []
+        },
+        {
+          "name": "Cable Straight Arm Rope Lat Pulldown",
+          "sets": 3,
+          "repsPerSet": 15,
+          "last": []
+        },
+        {
+          "name": "Cable Rope Hammer Curl",
+          "sets": 3,
+          "repsPerSet": 12,
+          "last": []
+        },
+        {
+          "name": "Machine Seated Reverse Fly",
+          "sets": 3,
+          "repsPerSet": 15,
+          "last": []
+        },
+        {
+          "name": "Dumbell Bicep Curl",
+          "sets": 3,
+          "repsPerSet": 12,
+          "last": []
+        }
+      ]
+    },
+    {
+      "name": "Legs",
+      "targetRestSeconds": 90,
+      "lastDate": "2026-06-10",
+      "exercises": [
+        {
+          "name": "Super Squat Machine",
+          "sets": 3,
+          "repsPerSet": 8,
+          "last": []
+        },
+        {
+          "name": "Barbell RDL",
+          "sets": 3,
+          "repsPerSet": 12,
+          "last": []
+        },
+        {
+          "name": "Machine Seated Leg Extension",
+          "sets": 3,
+          "repsPerSet": 15,
+          "last": []
+        },
+        {
+          "name": "Dumbbell Goblin Squat Pulses",
+          "sets": 3,
+          "repsPerSet": 20,
+          "last": []
+        },
+        {
+          "name": "Machine seated abduction",
+          "sets": 2,
+          "repsPerSet": 15,
+          "last": []
+        },
+        {
+          "name": "Hamstring curl",
+          "sets": 2,
+          "repsPerSet": 15,
+          "last": []
+        },
+        {
+          "name": "Seated machine ab crunch",
+          "sets": 3,
+          "repsPerSet": 12,
+          "last": []
+        }
+      ]
+    },
+    {
+      "name": "Full Body Conditioning",
+      "targetRestSeconds": 90,
+      "lastDate": "2025-12-06",
+      "exercises": [
+        {
+          "name": "Barbell overhead press",
+          "sets": 3,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "30",
+              "reps": 13
+            },
+            {
+              "weight": "30",
+              "reps": 9
+            },
+            {
+              "weight": "30",
+              "reps": 9
+            }
+          ]
+        },
+        {
+          "name": "Barbell front squat ",
+          "sets": 3,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "30",
+              "reps": 6
+            },
+            {
+              "weight": "30",
+              "reps": 6
+            },
+            {
+              "weight": "30",
+              "reps": 6
+            }
+          ]
+        },
+        {
+          "name": "Landmine bent over row",
+          "sets": 3,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "45",
+              "reps": 12
+            },
+            {
+              "weight": "45",
+              "reps": 12
+            },
+            {
+              "weight": "45",
+              "reps": 10
+            }
+          ]
+        },
+        {
+          "name": "Diamond push-up ",
+          "sets": 3,
+          "repsPerSet": 30,
+          "last": [
+            {
+              "weight": "0",
+              "reps": 15
+            },
+            {
+              "weight": "0",
+              "reps": 6
+            },
+            {
+              "weight": "0",
+              "reps": 11
+            }
+          ]
+        },
+        {
+          "name": "Dumbell lateral raise",
+          "sets": 3,
+          "repsPerSet": 15,
+          "last": [
+            {
+              "weight": "10",
+              "reps": 6
+            },
+            {
+              "weight": "10",
+              "reps": 6
+            },
+            {
+              "weight": "10",
+              "reps": 7
+            }
+          ]
+        },
+        {
+          "name": "Dumbbell shrug",
+          "sets": 3,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "30",
+              "reps": 10
+            },
+            {
+              "weight": "30",
+              "reps": 6
+            },
+            {
+              "weight": "30",
+              "reps": 8
+            }
+          ]
+        },
+        {
+          "name": "Dip machine bent leg raise",
+          "sets": 3,
+          "repsPerSet": 20,
+          "last": [
+            {
+              "weight": "0",
+              "reps": 15
+            },
+            {
+              "weight": "0",
+              "reps": 12
+            },
+            {
+              "weight": "0",
+              "reps": 10
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "Kyle Phase 4": [
+    {
+      "name": "Push",
+      "targetRestSeconds": 90,
+      "lastDate": "2026-06-08",
+      "exercises": [
+        {
+          "name": "Incline Dumbbell Press",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "25",
+              "reps": 6
+            },
+            {
+              "weight": "25",
+              "reps": 4
+            }
+          ]
+        },
+        {
+          "name": "Dumbbell Shoulder Press",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "17.5",
+              "reps": 5
+            },
+            {
+              "weight": "17.5",
+              "reps": 4
+            }
+          ]
+        },
+        {
+          "name": "Dip Machine",
+          "sets": 2,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "120",
+              "reps": 7
+            },
+            {
+              "weight": "120",
+              "reps": 6
+            }
+          ]
+        },
+        {
+          "name": "Cable Decline Chest Fly",
+          "sets": 2,
+          "repsPerSet": 15,
+          "last": [
+            {
+              "weight": "60",
+              "reps": 11
+            },
+            {
+              "weight": "65",
+              "reps": 6
+            }
+          ]
+        },
+        {
+          "name": "Cable Lateral Raise",
+          "sets": 2,
+          "repsPerSet": 15,
+          "last": [
+            {
+              "weight": "30",
+              "reps": 6
+            },
+            {
+              "weight": "30",
+              "reps": 4
+            }
+          ]
+        },
+        {
+          "name": "Triceps Pushdown - Rope Attachment",
+          "sets": 2,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "80",
+              "reps": 6
+            },
+            {
+              "weight": "80",
+              "reps": 6
+            }
+          ]
+        },
+        {
+          "name": "Machine Triceps Extension (drop sets)",
+          "sets": 4,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "50",
+              "reps": 6
+            },
+            {
+              "weight": "40",
+              "reps": 11
+            },
+            {
+              "weight": "35",
+              "reps": 13
+            },
+            {
+              "weight": "35",
+              "reps": 8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pull",
+      "targetRestSeconds": 90,
+      "lastDate": "2026-06-09",
+      "exercises": [
+        {
+          "name": "Wide-Grip Lat Pulldown",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "70",
+              "reps": 10
+            },
+            {
+              "weight": "75",
+              "reps": 9
+            }
+          ]
+        },
+        {
+          "name": "T-Bar Row with Handle each side independent ",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "30",
+              "reps": 8
+            },
+            {
+              "weight": "32.5",
+              "reps": 7
+            }
+          ]
+        },
+        {
+          "name": "Lying T-Bar Row",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "65",
+              "reps": 6
+            },
+            {
+              "weight": "65",
+              "reps": 5
+            }
+          ]
+        },
+        {
+          "name": "Reverse Flyes",
+          "sets": 2,
+          "repsPerSet": 15,
+          "last": [
+            {
+              "weight": "20",
+              "reps": 8
+            },
+            {
+              "weight": "20",
+              "reps": 7
+            }
+          ]
+        },
+        {
+          "name": "Dumbbell Shrug",
+          "sets": 2,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "37.5",
+              "reps": 8
+            },
+            {
+              "weight": "40",
+              "reps": 8
+            }
+          ]
+        },
+        {
+          "name": "Machine Preacher Curls",
+          "sets": 2,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "27.5",
+              "reps": 8
+            },
+            {
+              "weight": "30",
+              "reps": 4
+            }
+          ]
+        },
+        {
+          "name": "Hammer Curls",
+          "sets": 2,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "20",
+              "reps": 6
+            },
+            {
+              "weight": "20",
+              "reps": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Legs",
+      "targetRestSeconds": 90,
+      "lastDate": "2026-06-10",
+      "exercises": [
+        {
+          "name": "Lying Leg Curls",
+          "sets": 2,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "20",
+              "reps": 7
+            },
+            {
+              "weight": "20",
+              "reps": 5
+            }
+          ]
+        },
+        {
+          "name": "Goblet Squat",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "90",
+              "reps": 14
+            },
+            {
+              "weight": "100",
+              "reps": 8
+            }
+          ]
+        },
+        {
+          "name": "Leg Press",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "80",
+              "reps": 9
+            },
+            {
+              "weight": "90",
+              "reps": 6
+            }
+          ]
+        },
+        {
+          "name": "Leg Extensions",
+          "sets": 2,
+          "repsPerSet": 15,
+          "last": [
+            {
+              "weight": "67.5",
+              "reps": 9
+            },
+            {
+              "weight": "67.5",
+              "reps": 7
+            }
+          ]
+        },
+        {
+          "name": "Thigh Abductor",
+          "sets": 2,
+          "repsPerSet": 15,
+          "last": [
+            {
+              "weight": "77.5",
+              "reps": 8
+            },
+            {
+              "weight": "77.5",
+              "reps": 7
+            }
+          ]
+        },
+        {
+          "name": "Seated Calf Raise",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "62.5",
+              "reps": 10
+            },
+            {
+              "weight": "65",
+              "reps": 8
+            }
+          ]
+        },
+        {
+          "name": "Ab Crunch Machine",
+          "sets": 3,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "82.5",
+              "reps": 13
+            },
+            {
+              "weight": "82.5",
+              "reps": 12
+            },
+            {
+              "weight": "82.5",
+              "reps": 8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Upper",
+      "targetRestSeconds": 90,
+      "lastDate": "2026-06-05",
+      "exercises": [
+        {
+          "name": "Barbell Bench Press - Medium Grip",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "55",
+              "reps": 9
+            },
+            {
+              "weight": "60",
+              "reps": 5
+            }
+          ]
+        },
+        {
+          "name": "Seated Cable Rows",
+          "sets": 2,
+          "repsPerSet": 10,
+          "last": [
+            {
+              "weight": "80",
+              "reps": 7
+            },
+            {
+              "weight": "80",
+              "reps": 8
+            }
+          ]
+        },
+        {
+          "name": "Smith Machine Overhead Shoulder Press",
+          "sets": 2,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "40",
+              "reps": 9
+            },
+            {
+              "weight": "45",
+              "reps": 6
+            }
+          ]
+        },
+        {
+          "name": "Chest Fly (machine)",
+          "sets": 2,
+          "repsPerSet": 15,
+          "last": [
+            {
+              "weight": "88",
+              "reps": 7
+            },
+            {
+              "weight": "88",
+              "reps": 5
+            }
+          ]
+        },
+        {
+          "name": "Wide-Grip Pull-Up",
+          "sets": 2,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "0",
+              "reps": 5
+            },
+            {
+              "weight": "0",
+              "reps": 4
+            }
+          ]
+        },
+        {
+          "name": "Lateral deltoids",
+          "sets": 2,
+          "repsPerSet": 12,
+          "last": [
+            {
+              "weight": "20",
+              "reps": 6
+            },
+            {
+              "weight": "20",
+              "reps": 5
+            }
+          ]
+        },
+        {
+          "name": "Machine Bicep Curl",
+          "sets": 2,
+          "repsPerSet": 15,
+          "last": [
+            {
+              "weight": "65",
+              "reps": 6
+            },
+            {
+              "weight": "65",
+              "reps": 6
+            }
+          ]
+        },
+        {
+          "name": "Machine Triceps Extension",
+          "sets": 2,
+          "repsPerSet": 15,
+          "last": [
+            {
+              "weight": "55",
+              "reps": 5
+            },
+            {
+              "weight": "55",
+              "reps": 6
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

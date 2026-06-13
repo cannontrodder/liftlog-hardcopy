@@ -1,23 +1,22 @@
-/* LiftLog — client-side workout tracker */
-
 (function () {
   'use strict';
 
-  let data = null;           // full backup JSON
-  let historyData = null;    // history.json
-  let activeSession = null;  // session object currently displayed
-  let activeExIdx = 0;       // index of exercise being shown
+  let data = null;          // current phase backup JSON
+  let phasesData = null;    // all phases from phases.json
+  let historyData = null;
+  let activeSession = null;
+  let activeExIdx = 0;
+  let focusMode = false;
+  let activePhaseName = null;
 
-  // ── Timer state ───────────────────────────────────────────────────────────
   const timer = {
-    duration: 90,       // seconds (from session or custom)
+    duration: 90,
     remaining: 0,
     running: false,
     interval: null,
-    popoverOpen: false,
   };
 
-  // ── Storage helpers ──────────────────────────────────────────────────────
+  // ── Storage ──────────────────────────────────────────────────────────────
 
   function storageKey(sessionName, exerciseName, setIndex, field) {
     return `liftlog-${data.backupDate}-${sessionName}-${exerciseName}-set${setIndex}-${field}`;
@@ -25,32 +24,25 @@
 
   function saveField(sessionName, exerciseName, setIndex, field, value) {
     const key = storageKey(sessionName, exerciseName, setIndex, field);
-    if (value === '' || value === null || value === undefined) {
-      localStorage.removeItem(key);
-    } else {
-      localStorage.setItem(key, String(value));
-    }
+    if (value === '' || value == null) localStorage.removeItem(key);
+    else localStorage.setItem(key, String(value));
   }
 
   function loadField(sessionName, exerciseName, setIndex, field) {
     return localStorage.getItem(storageKey(sessionName, exerciseName, setIndex, field)) ?? '';
   }
 
-  // ── Date formatting ───────────────────────────────────────────────────────
+  // ── Helpers ──────────────────────────────────────────────────────────────
 
   function fmtDate(iso) {
     if (!iso) return '—';
-    const d = new Date(iso + 'T00:00:00');
-    return d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
+    return new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
   }
-
-  // ── Completion state ──────────────────────────────────────────────────────
 
   function exerciseState(session, exercise) {
     let filled = 0;
     for (let i = 0; i < exercise.sets; i++) {
-      const r = loadField(session.name, exercise.name, i, 'reps');
-      if (r !== '') filled++;
+      if (loadField(session.name, exercise.name, i, 'reps') !== '') filled++;
     }
     if (filled === 0) return 'none';
     if (filled === exercise.sets) return 'complete';
@@ -58,12 +50,8 @@
   }
 
   function crumbIcon(state) {
-    if (state === 'complete') return '✓';
-    if (state === 'partial') return '◐';
-    return '●';
+    return state === 'complete' ? '✓' : state === 'partial' ? '◐' : '●';
   }
-
-  // ── NEXT session ──────────────────────────────────────────────────────────
 
   function oldestSession(sessions) {
     return sessions.reduce((oldest, s) => {
@@ -73,7 +61,13 @@
     });
   }
 
-  // ── Timer ─────────────────────────────────────────────────────────────────
+  function el(tag, className) {
+    const e = document.createElement(tag);
+    if (className) e.className = className;
+    return e;
+  }
+
+  // ── Timer ────────────────────────────────────────────────────────────────
 
   function timerStart(seconds) {
     if (timer.interval) clearInterval(timer.interval);
@@ -87,15 +81,13 @@
         timer.running = false;
         clearInterval(timer.interval);
         timer.interval = null;
-        updateTimerUI('done');
-        setTimeout(() => {
-          if (!timer.running) updateTimerUI('idle');
-        }, 3000);
+        updateAllTimers('done');
+        setTimeout(() => { if (!timer.running) updateAllTimers('idle'); }, 2500);
         return;
       }
-      updateTimerUI(timer.remaining <= 15 ? 'warning' : 'active');
+      updateAllTimers(timer.remaining <= 15 ? 'warning' : 'active');
     }, 1000);
-    updateTimerUI('active');
+    updateAllTimers('active');
   }
 
   function timerStop() {
@@ -103,7 +95,7 @@
     timer.interval = null;
     timer.running = false;
     timer.remaining = 0;
-    updateTimerUI('idle');
+    updateAllTimers('idle');
   }
 
   function timerFmt(secs) {
@@ -112,54 +104,102 @@
     return `${m}:${String(s).padStart(2, '0')}`;
   }
 
-  function updateTimerUI(state) {
+  function timerStateClass() {
+    if (!timer.running && timer.remaining === 0) return 'idle';
+    if (timer.remaining === 0) return 'done';
+    return timer.remaining <= 15 ? 'warning' : 'active';
+  }
+
+  function timerDisplayText(state) {
+    if (state === 'idle') return 'Rest';
+    if (state === 'done') return 'GO!';
+    return timerFmt(timer.remaining);
+  }
+
+  function updateAllTimers(state) {
+    // Floating pill
     const pill = document.querySelector('.timer-pill');
-    const text = document.querySelector('.timer-text');
-    const icon = document.querySelector('.timer-icon');
-    if (!pill) return;
-
-    pill.className = 'timer-pill';
-    if (state === 'active') pill.classList.add('active');
-    else if (state === 'warning') pill.classList.add('warning');
-    else if (state === 'done') pill.classList.add('done');
-
-    if (state === 'idle') {
-      icon.textContent = '⏱';
-      text.textContent = 'Rest';
-    } else if (state === 'done') {
-      icon.textContent = '🟢';
-      text.textContent = 'GO!';
-    } else {
-      icon.textContent = '';
-      text.textContent = timerFmt(timer.remaining);
+    const text = document.querySelector('.timer-pill .timer-text');
+    if (pill && text) {
+      pill.className = `timer-pill ${state !== 'idle' ? state : ''}`.trim();
+      text.textContent = timerDisplayText(state);
     }
-
-    // Also update focus mode inline timer if visible
-    const focusTimer = document.querySelector('.focus-timer-inline');
-    if (focusTimer) {
-      focusTimer.className = 'focus-timer-inline';
-      if (state === 'idle') { focusTimer.textContent = 'Rest'; focusTimer.classList.add('idle'); }
-      else if (state === 'done') { focusTimer.textContent = 'GO!'; focusTimer.classList.add('done'); }
-      else if (state === 'warning') { focusTimer.textContent = timerFmt(timer.remaining); focusTimer.classList.add('warning'); }
-      else { focusTimer.textContent = timerFmt(timer.remaining); }
+    // Inline (focus mode)
+    const inlineWrap = document.querySelector('.focus-timer-inline');
+    const inlineText = document.querySelector('.focus-timer-text');
+    if (inlineWrap && inlineText) {
+      inlineWrap.className = `focus-timer-inline ${state !== 'idle' ? state : ''}`.trim();
+      inlineText.textContent = timerDisplayText(state);
     }
   }
 
-  // ── History overlay ───────────────────────────────────────────────────────
+  // Shared timer widget — used in both floating and focus-mode inline positions
+  function buildTimerWidget() {
+    const wrap = el('div', 'timer-widget');
+
+    const pill = el('div', 'timer-pill');
+    const state = timerStateClass();
+    if (state !== 'idle') pill.classList.add(state);
+
+    const text = el('span', 'timer-text');
+    text.textContent = timerDisplayText(state);
+    pill.appendChild(text);
+
+    pill.addEventListener('click', () => {
+      if (timer.running) timerStop();
+      else timerStart(activeSession.targetRestSeconds || 90);
+    });
+
+    const editBtn = el('button', 'timer-edit-btn');
+    editBtn.textContent = '✏';
+    editBtn.title = 'Change duration';
+    editBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleTimerPresets(wrap, editBtn);
+    });
+
+    wrap.appendChild(pill);
+    wrap.appendChild(editBtn);
+    return wrap;
+  }
+
+  function toggleTimerPresets(wrap, editBtn) {
+    const existing = wrap.querySelector('.timer-popover');
+    if (existing) { existing.remove(); return; }
+
+    const popover = el('div', 'timer-popover');
+    const label = el('div', 'timer-popover-label');
+    label.textContent = 'Rest duration';
+    const presets = el('div', 'timer-presets');
+    [30, 60, 90, 120, 180].forEach(s => {
+      const btn = el('button', 'timer-preset-btn');
+      btn.textContent = s < 60 ? `${s}s` : `${s / 60}m`;
+      if (s === timer.duration) btn.classList.add('current');
+      btn.addEventListener('click', () => {
+        popover.remove();
+        timerStart(s);
+      });
+      presets.appendChild(btn);
+    });
+    popover.appendChild(label);
+    popover.appendChild(presets);
+    // Insert before the pill so it appears above/before the widget
+    wrap.insertBefore(popover, wrap.firstChild);
+  }
+
+  // ── History overlay ──────────────────────────────────────────────────────
 
   function openHistory(exerciseName) {
     const allEntries = historyData ? (historyData[activeSession.name] || []) : [];
     const last4 = allEntries
       .filter(e => e.exercises.some(ex => ex.name === exerciseName))
-      .slice(-4)
-      .reverse();
+      .slice(0, 4);
 
     const backdrop = el('div', 'overlay-backdrop');
-    backdrop.addEventListener('click', (e) => {
-      if (e.target === backdrop) backdrop.remove();
-    });
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) backdrop.remove(); });
 
     const sheet = el('div', 'history-sheet');
+
     const hdr = el('div', 'sheet-header');
     const title = el('div', 'sheet-title');
     title.textContent = exerciseName;
@@ -182,9 +222,9 @@
         const dateDiv = el('div', 'history-date');
         dateDiv.textContent = fmtDate(session.date);
         const setsDiv = el('div', 'history-sets');
-        setsDiv.innerHTML = entry.done.map((s, i) => {
-          return `Set ${i + 1}: <span>${s.weight}kg × ${s.reps}</span>`;
-        }).join(' &nbsp; ');
+        setsDiv.innerHTML = entry.done.map((s, i) =>
+          `<span>${s.weight}kg×${s.reps}</span>`
+        ).join(' ');
         row.appendChild(dateDiv);
         row.appendChild(setsDiv);
         sheet.appendChild(row);
@@ -195,97 +235,40 @@
     document.body.appendChild(backdrop);
   }
 
-  // ── Focus mode ────────────────────────────────────────────────────────────
+  // ── Set rows (shared between main and focus) ─────────────────────────────
 
-  function openFocus(exercise) {
-    const overlay = el('div', 'focus-overlay');
-    overlay.setAttribute('id', 'focus-overlay');
-
-    // Top bar
-    const topBar = el('div', 'focus-top-bar');
-    const backBtn = el('button', 'focus-back');
-    backBtn.innerHTML = '← Back';
-    backBtn.addEventListener('click', () => {
-      overlay.remove();
-    });
-
-    const timerInline = el('div', 'focus-timer-inline idle');
-    const timerState = timer.running
-      ? (timer.remaining <= 15 ? 'warning' : 'active')
-      : 'idle';
-    timerInline.className = 'focus-timer-inline' + (timerState === 'idle' ? ' idle' : timerState === 'warning' ? ' warning' : '');
-    timerInline.textContent = timer.running ? timerFmt(timer.remaining) : 'Rest';
-    timerInline.addEventListener('click', () => {
-      if (timer.running) timerStop();
-      else timerStart(activeSession.targetRestSeconds || 90);
-    });
-
-    topBar.appendChild(backBtn);
-    topBar.appendChild(timerInline);
-    overlay.appendChild(topBar);
-
-    // Body
-    const body = el('div', 'focus-body');
-
-    const nameDiv = el('div', 'focus-name');
-    nameDiv.textContent = exercise.name;
-    const targetDiv = el('div', 'focus-target');
-    targetDiv.textContent = `Target: ${exercise.sets} sets × ${exercise.repsPerSet} reps`;
-    body.appendChild(nameDiv);
-    body.appendChild(targetDiv);
-
-    // Last time
-    const lastBox = el('div', 'focus-last');
-    const lastLabel = el('div', 'focus-last-label');
-    lastLabel.textContent = `Last time (${fmtDate(activeSession.lastDate)})`;
-    const lastVal = el('div', 'focus-last-val');
-    if (exercise.last && exercise.last.length) {
-      lastVal.innerHTML = exercise.last.map((s, i) =>
-        `Set ${i + 1}: <strong>${s.weight}kg × ${s.reps}</strong>`
-      ).join(' &nbsp; ');
-    } else {
-      lastVal.textContent = 'No previous data';
-    }
-    lastBox.appendChild(lastLabel);
-    lastBox.appendChild(lastVal);
-    body.appendChild(lastBox);
-
-    // Sets
-    const setsWrap = el('div', 'focus-sets');
+  function buildSetRows(exercise, onLastSetFilled) {
+    const rows = [];
     for (let i = 0; i < exercise.sets; i++) {
-      const row = el('div', 'focus-set-row');
-      const num = el('div', 'set-num');
-      num.textContent = i + 1;
+      const row = el('div', 'set-row');
+
+      const label = el('div', 'set-label');
+      label.textContent = `Set ${i + 1}`;
 
       const lastSet = exercise.last && exercise.last[i];
       const savedW = loadField(activeSession.name, exercise.name, i, 'weight');
       const savedR = loadField(activeSession.name, exercise.name, i, 'reps');
 
       const wInput = el('input', 'set-input' + (savedW ? ' filled' : ''));
-      wInput.type = 'number';
-      wInput.min = '0';
-      wInput.step = '0.5';
+      wInput.type = 'number'; wInput.min = '0'; wInput.step = '0.5';
       wInput.inputMode = 'decimal';
       wInput.placeholder = lastSet ? lastSet.weight : '0';
       wInput.value = savedW || (lastSet ? lastSet.weight : '');
+      wInput.setAttribute('data-field', 'weight');
       wInput.setAttribute('aria-label', `${exercise.name} set ${i + 1} weight`);
 
-      const wUnit = el('span', 'set-unit');
-      wUnit.textContent = 'kg';
-
-      const sep = el('div', 'set-sep');
-      sep.textContent = '×';
+      const mid = el('span', 'set-mid');
+      mid.textContent = 'kg ×';
 
       const rInput = el('input', 'set-input' + (savedR ? ' filled' : ''));
-      rInput.type = 'number';
-      rInput.min = '0';
-      rInput.inputMode = 'numeric';
-      rInput.pattern = '[0-9]*';
+      rInput.type = 'number'; rInput.min = '0';
+      rInput.inputMode = 'numeric'; rInput.pattern = '[0-9]*';
       rInput.placeholder = lastSet ? String(lastSet.reps) : '0';
       rInput.value = savedR;
+      rInput.setAttribute('data-field', 'reps');
       rInput.setAttribute('aria-label', `${exercise.name} set ${i + 1} reps`);
 
-      const saveAndCheck = () => {
+      const onChange = () => {
         const w = wInput.value.trim();
         const r = rInput.value.trim();
         saveField(activeSession.name, exercise.name, i, 'weight', w);
@@ -293,116 +276,69 @@
         wInput.classList.toggle('filled', w !== '');
         rInput.classList.toggle('filled', r !== '');
         updateBreadcrumb(exercise.name);
-        // Also update main view inputs if visible
-        syncMainInputs(exercise.name, i, w, r);
-        // Auto-start timer when last set reps are entered
-        if (i === exercise.sets - 1 && r !== '') {
-          timerStart(activeSession.targetRestSeconds || 90);
-        }
+        if (i === exercise.sets - 1 && r !== '') onLastSetFilled();
       };
 
-      wInput.addEventListener('input', saveAndCheck);
-      rInput.addEventListener('input', saveAndCheck);
+      wInput.addEventListener('input', onChange);
+      rInput.addEventListener('input', onChange);
 
-      row.appendChild(num);
+      row.appendChild(label);
       row.appendChild(wInput);
-      row.appendChild(wUnit);
-      row.appendChild(sep);
+      row.appendChild(mid);
       row.appendChild(rInput);
-      setsWrap.appendChild(row);
+      rows.push(row);
     }
-    body.appendChild(setsWrap);
-    overlay.appendChild(body);
-
-    // Footer
-    const footer = el('div', 'focus-footer');
-    const nextBtn = el('button', 'focus-next-btn');
-    const isLast = activeExIdx === activeSession.exercises.length - 1;
-    nextBtn.textContent = isLast ? 'Session complete ✓' : 'Next exercise →';
-    nextBtn.addEventListener('click', () => {
-      overlay.remove();
-      if (!isLast) {
-        activeExIdx++;
-        render();
-      }
-    });
-    footer.appendChild(nextBtn);
-    overlay.appendChild(footer);
-
-    document.body.appendChild(overlay);
+    return rows;
   }
 
-  // Sync inputs in main view (if rendered) when focus mode changes them
-  function syncMainInputs(exerciseName, setIndex, weight, reps) {
-    const cards = document.querySelectorAll('.exercise-card');
-    cards.forEach(card => {
-      if (card.getAttribute('data-exercise') !== exerciseName) return;
-      const rows = card.querySelectorAll('.set-row');
-      const row = rows[setIndex];
-      if (!row) return;
-      const inputs = row.querySelectorAll('.set-input');
-      if (inputs[0]) { inputs[0].value = weight; inputs[0].classList.toggle('filled', weight !== ''); }
-      if (inputs[1]) { inputs[1].value = reps; inputs[1].classList.toggle('filled', reps !== ''); }
-    });
-  }
-
-  // ── Timer popover ─────────────────────────────────────────────────────────
-
-  function toggleTimerPopover() {
-    timer.popoverOpen = !timer.popoverOpen;
-    const existing = document.querySelector('.timer-popover');
-    if (!timer.popoverOpen || existing) {
-      if (existing) existing.remove();
-      timer.popoverOpen = false;
-      return;
-    }
-    const popover = el('div', 'timer-popover');
-    const label = el('div', 'timer-popover-label');
-    label.textContent = 'Set duration';
-    const presets = el('div', 'timer-presets');
-    [30, 60, 90, 120, 180].forEach(s => {
-      const btn = el('button', 'timer-preset-btn');
-      btn.textContent = s < 60 ? `${s}s` : `${s / 60}m`;
-      btn.addEventListener('click', () => {
-        timer.popoverOpen = false;
-        const pop = document.querySelector('.timer-popover');
-        if (pop) pop.remove();
-        timerStart(s);
-      });
-      presets.appendChild(btn);
-    });
-    popover.appendChild(label);
-    popover.appendChild(presets);
-    const timerEl = document.querySelector('.rest-timer');
-    if (timerEl) timerEl.insertBefore(popover, timerEl.firstChild);
-  }
-
-  // ── Render ────────────────────────────────────────────────────────────────
+  // ── Main render ──────────────────────────────────────────────────────────
 
   function render() {
     const app = document.getElementById('app');
     app.innerHTML = '';
 
+    // Remove any stale floating timer
+    document.querySelectorAll('.rest-timer').forEach(t => t.remove());
+
     const exercise = activeSession.exercises[activeExIdx];
+    const nextSession = oldestSession(data.sessions);
 
     // Header
     const header = el('div', 'header');
-    header.innerHTML = `
-      <div class="header-title">${data.name}</div>
-      <div class="header-row">
-        <div class="header-name">${activeSession.name}</div>
-        <div class="header-date">${fmtDate(activeSession.lastDate)}</div>
-      </div>
-    `;
+    const titleRow = el('div', 'header-title-row');
+    const titleLabel = el('div', 'header-title');
+    titleLabel.textContent = data.name;
+    titleRow.appendChild(titleLabel);
+
+    if (phasesData) {
+      const phaseNames = Object.keys(phasesData);
+      const phaseSel = el('select', 'phase-select');
+      phaseNames.forEach(pn => {
+        const opt = document.createElement('option');
+        opt.value = pn;
+        opt.textContent = pn;
+        if (pn === activePhaseName) opt.selected = true;
+        phaseSel.appendChild(opt);
+      });
+      phaseSel.addEventListener('change', () => {
+        switchPhase(phaseSel.value);
+      });
+      titleRow.appendChild(phaseSel);
+    }
+
+    const nameRow = el('div', 'header-row');
+    nameRow.innerHTML = `<div class="header-name">${activeSession.name}</div>
+      <div class="header-date">${fmtDate(activeSession.lastDate)}</div>`;
+    header.appendChild(titleRow);
+    header.appendChild(nameRow);
     app.appendChild(header);
 
     // Session tabs
-    const nextSession = oldestSession(data.sessions);
     const tabsEl = el('div', 'session-tabs');
     data.sessions.forEach(session => {
+      const isNext = session.name === nextSession.name;
       const tab = el('button', 'session-tab' + (session.name === activeSession.name ? ' active' : ''));
       tab.setAttribute('data-session', session.name);
-      const isNext = session.name === nextSession.name;
       tab.innerHTML = `
         <div class="session-tab-name">${session.name}${isNext ? '<span class="next-badge">NEXT</span>' : ''}</div>
         <div class="session-tab-date">${fmtDate(session.lastDate)}</div>
@@ -416,30 +352,26 @@
     });
     app.appendChild(tabsEl);
 
-    // Breadcrumb — clickable exercise dots
+    // Breadcrumb
     const bc = el('div', 'breadcrumb');
-    bc.setAttribute('id', 'breadcrumb');
+    bc.id = 'breadcrumb';
     activeSession.exercises.forEach((ex, idx) => {
       const state = exerciseState(activeSession, ex);
       const crumb = el('div', `crumb${idx === activeExIdx ? ' active-crumb' : ''}${state === 'partial' ? ' partial' : state === 'complete' ? ' complete' : ''}`);
       crumb.setAttribute('data-crumb', ex.name);
       crumb.innerHTML = `<span class="crumb-icon">${crumbIcon(state)}</span><span class="crumb-label" title="${ex.name}">${ex.name}</span>`;
-      crumb.addEventListener('click', () => {
-        activeExIdx = idx;
-        render();
-      });
+      crumb.addEventListener('click', () => { activeExIdx = idx; render(); });
       bc.appendChild(crumb);
     });
     app.appendChild(bc);
 
-    // Exercise navigation bar
+    // Nav bar: ‹  1/7  ›  [⛶ Focus]
     const nav = el('div', 'exercise-nav');
+
     const prevBtn = el('button', 'nav-btn');
     prevBtn.textContent = '‹';
     prevBtn.disabled = activeExIdx === 0;
-    prevBtn.addEventListener('click', () => {
-      if (activeExIdx > 0) { activeExIdx--; render(); }
-    });
+    prevBtn.addEventListener('click', () => { if (activeExIdx > 0) { activeExIdx--; render(); } });
 
     const counter = el('div', 'nav-counter');
     counter.textContent = `${activeExIdx + 1} / ${activeSession.exercises.length}`;
@@ -447,164 +379,179 @@
     const nextBtn = el('button', 'nav-btn');
     nextBtn.textContent = '›';
     nextBtn.disabled = activeExIdx === activeSession.exercises.length - 1;
-    nextBtn.addEventListener('click', () => {
-      if (activeExIdx < activeSession.exercises.length - 1) { activeExIdx++; render(); }
+    nextBtn.addEventListener('click', () => { if (activeExIdx < activeSession.exercises.length - 1) { activeExIdx++; render(); } });
+
+    const focusToggle = el('button', 'nav-focus-btn');
+    focusToggle.innerHTML = '⛶ Focus';
+    focusToggle.addEventListener('click', () => {
+      focusMode = true;
+      renderFocus();
     });
 
     nav.appendChild(prevBtn);
     nav.appendChild(counter);
     nav.appendChild(nextBtn);
+    nav.appendChild(focusToggle);
     app.appendChild(nav);
 
     // Exercise card
     const area = el('div', 'exercise-area');
-    area.appendChild(renderExercise(exercise));
-    app.appendChild(area);
-
-    // Floating rest timer
-    renderTimer(app);
-
-    // Swipe support
-    setupSwipe(area);
-  }
-
-  function renderExercise(exercise) {
     const card = el('div', 'exercise-card');
     card.setAttribute('data-exercise', exercise.name);
 
-    const header = el('div', 'exercise-header');
+    const exHeader = el('div', 'exercise-header');
     const left = el('div', 'exercise-header-left');
-    left.innerHTML = `
-      <div class="exercise-name">${exercise.name}</div>
-      <div class="exercise-meta">${exercise.sets} × ${exercise.repsPerSet} reps target</div>
-    `;
-    const actions = el('div', 'exercise-header-actions');
+    left.innerHTML = `<div class="exercise-name">${exercise.name}</div>
+      <div class="exercise-meta">${exercise.sets} sets · ${exercise.repsPerSet} reps target</div>`;
 
     const histBtn = el('button', 'icon-btn');
     histBtn.textContent = '📋';
     histBtn.title = 'History';
     histBtn.addEventListener('click', () => openHistory(exercise.name));
 
-    const focusBtn = el('button', 'icon-btn');
-    focusBtn.textContent = '⛶';
-    focusBtn.title = 'Focus mode';
-    focusBtn.addEventListener('click', () => openFocus(exercise));
-
-    actions.appendChild(histBtn);
-    actions.appendChild(focusBtn);
-    header.appendChild(left);
-    header.appendChild(actions);
-    card.appendChild(header);
+    exHeader.appendChild(left);
+    exHeader.appendChild(histBtn);
+    card.appendChild(exHeader);
 
     const grid = el('div', 'sets-grid');
-    for (let i = 0; i < exercise.sets; i++) {
-      const row = el('div', 'set-row');
-      const setNum = el('div', 'set-num');
-      setNum.textContent = i + 1;
-
-      const lastSet = exercise.last && exercise.last[i];
-
-      const savedW = loadField(activeSession.name, exercise.name, i, 'weight');
-      const savedR = loadField(activeSession.name, exercise.name, i, 'reps');
-
-      const wInput = el('input', 'set-input' + (savedW ? ' filled' : ''));
-      wInput.type = 'number';
-      wInput.min = '0';
-      wInput.step = '0.5';
-      wInput.inputMode = 'decimal';
-      wInput.placeholder = lastSet ? lastSet.weight : '0';
-      wInput.value = savedW || (lastSet ? lastSet.weight : '');
-      wInput.setAttribute('data-exercise', exercise.name);
-      wInput.setAttribute('data-set', String(i));
-      wInput.setAttribute('data-field', 'weight');
-      wInput.setAttribute('aria-label', `${exercise.name} set ${i + 1} weight`);
-
-      const wUnit = el('span', 'set-unit');
-      wUnit.textContent = 'kg';
-
-      const sep = el('div', 'set-sep');
-      sep.textContent = '×';
-
-      const rInput = el('input', 'set-input' + (savedR ? ' filled' : ''));
-      rInput.type = 'number';
-      rInput.min = '0';
-      rInput.inputMode = 'numeric';
-      rInput.pattern = '[0-9]*';
-      rInput.placeholder = lastSet ? String(lastSet.reps) : '0';
-      rInput.value = savedR;
-      rInput.setAttribute('data-exercise', exercise.name);
-      rInput.setAttribute('data-set', String(i));
-      rInput.setAttribute('data-field', 'reps');
-      rInput.setAttribute('aria-label', `${exercise.name} set ${i + 1} reps`);
-
-      const onInput = () => {
-        const w = wInput.value.trim();
-        const r = rInput.value.trim();
-        saveField(activeSession.name, exercise.name, i, 'weight', w);
-        saveField(activeSession.name, exercise.name, i, 'reps', r);
-        wInput.classList.toggle('filled', w !== '');
-        rInput.classList.toggle('filled', r !== '');
-        updateBreadcrumb(exercise.name);
-        // Auto-start timer when last set reps are entered
-        if (i === exercise.sets - 1 && r !== '') {
-          timerStart(activeSession.targetRestSeconds || 90);
-        }
-      };
-
-      wInput.addEventListener('input', onInput);
-      rInput.addEventListener('input', onInput);
-
-      row.appendChild(setNum);
-      row.appendChild(wInput);
-      row.appendChild(wUnit);
-      row.appendChild(sep);
-      row.appendChild(rInput);
-      grid.appendChild(row);
-    }
+    buildSetRows(exercise, () => timerStart(activeSession.targetRestSeconds || 90))
+      .forEach(row => grid.appendChild(row));
     card.appendChild(grid);
-    return card;
-  }
+    area.appendChild(card);
+    app.appendChild(area);
 
-  function renderTimer(container) {
+    setupSwipe(area);
+
+    // Floating timer (bottom-right)
     const timerEl = el('div', 'rest-timer');
-
-    const pill = el('div', 'timer-pill' + (timer.running ? (timer.remaining <= 15 ? ' warning' : ' active') : ''));
-    const icon = el('span', 'timer-icon');
-    icon.textContent = timer.running ? '' : '⏱';
-    const text = el('span', 'timer-text');
-    text.textContent = timer.running ? timerFmt(timer.remaining) : 'Rest';
-
-    pill.appendChild(icon);
-    pill.appendChild(text);
-
-    // Single tap: start/stop
-    pill.addEventListener('click', (e) => {
-      // Close popover if open
-      if (timer.popoverOpen) {
-        toggleTimerPopover();
-        return;
-      }
-      if (timer.running) {
-        timerStop();
-      } else {
-        timerStart(activeSession.targetRestSeconds || 90);
-      }
-    });
-
-    // Long-press: open popover
-    let pressTimer = null;
-    pill.addEventListener('pointerdown', () => {
-      pressTimer = setTimeout(() => {
-        pressTimer = null;
-        toggleTimerPopover();
-      }, 600);
-    });
-    pill.addEventListener('pointerup', () => { if (pressTimer) clearTimeout(pressTimer); });
-    pill.addEventListener('pointercancel', () => { if (pressTimer) clearTimeout(pressTimer); });
-
-    timerEl.appendChild(pill);
+    timerEl.appendChild(buildTimerWidget());
     document.body.appendChild(timerEl);
   }
+
+  // ── Focus mode ──────────────────────────────────────────────────────────
+
+  function renderFocus() {
+    // Remove existing focus overlay if any
+    const existing = document.getElementById('focus-overlay');
+    if (existing) existing.remove();
+
+    const exercise = activeSession.exercises[activeExIdx];
+    const overlay = el('div', 'focus-overlay');
+    overlay.id = 'focus-overlay';
+
+    // Top bar: ← Back   1/7   ⛶ Exit   [timer widget]
+    const topBar = el('div', 'focus-top-bar');
+
+    const backBtn = el('button', 'focus-back');
+    backBtn.innerHTML = '← Back';
+    backBtn.addEventListener('click', () => {
+      focusMode = false;
+      overlay.remove();
+      render();
+    });
+
+    const focusCounter = el('div', 'nav-counter');
+    focusCounter.style.flex = '1';
+    focusCounter.style.textAlign = 'center';
+    focusCounter.textContent = `${activeExIdx + 1} / ${activeSession.exercises.length}`;
+
+    // Timer inline widget (same component, just positioned inline)
+    const timerWrap = el('div', 'focus-timer-inline');
+    const state = timerStateClass();
+    if (state !== 'idle') timerWrap.classList.add(state);
+
+    const timerText = el('span', 'focus-timer-text');
+    timerText.textContent = timerDisplayText(state);
+    timerText.addEventListener('click', () => {
+      if (timer.running) timerStop();
+      else timerStart(activeSession.targetRestSeconds || 90);
+    });
+
+    const timerEditBtn = el('button', 'timer-edit-btn');
+    timerEditBtn.textContent = '✏';
+    timerEditBtn.title = 'Change duration';
+    timerEditBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleTimerPresets(timerWrap, timerEditBtn);
+    });
+
+    timerWrap.appendChild(timerText);
+    timerWrap.appendChild(timerEditBtn);
+
+    topBar.appendChild(backBtn);
+    topBar.appendChild(focusCounter);
+    topBar.appendChild(timerWrap);
+    overlay.appendChild(topBar);
+
+    // Body
+    const body = el('div', 'focus-body');
+
+    const nameDiv = el('div', 'focus-name');
+    nameDiv.textContent = exercise.name;
+    body.appendChild(nameDiv);
+
+    const targetDiv = el('div', 'focus-target');
+    targetDiv.textContent = `${exercise.sets} sets · ${exercise.repsPerSet} reps target`;
+    body.appendChild(targetDiv);
+
+    if (exercise.last && exercise.last.length) {
+      const lastBox = el('div', 'focus-last');
+      const lastLabel = el('div', 'focus-last-label');
+      lastLabel.textContent = `Last time · ${fmtDate(activeSession.lastDate)}`;
+      const lastVal = el('div', 'focus-last-val');
+      lastVal.innerHTML = exercise.last.map((s, i) =>
+        `<strong>${s.weight}kg×${s.reps}</strong>`
+      ).join('  ');
+      lastBox.appendChild(lastLabel);
+      lastBox.appendChild(lastVal);
+      body.appendChild(lastBox);
+    }
+
+    const setsWrap = el('div', 'focus-sets');
+    buildSetRows(exercise, () => timerStart(activeSession.targetRestSeconds || 90))
+      .forEach(row => {
+        row.classList.add('focus-set-row');
+        setsWrap.appendChild(row);
+      });
+    body.appendChild(setsWrap);
+    overlay.appendChild(body);
+
+    // Footer: prev / done / next
+    const footer = el('div', 'focus-footer');
+
+    const prevBtn = el('button', 'focus-nav-btn');
+    prevBtn.textContent = '‹ Prev';
+    prevBtn.disabled = activeExIdx === 0;
+    prevBtn.addEventListener('click', () => {
+      activeExIdx--;
+      renderFocus();
+    });
+
+    const doneBtn = el('button', 'focus-next-btn');
+    const isLast = activeExIdx === activeSession.exercises.length - 1;
+    doneBtn.textContent = isLast ? 'Done ✓' : 'Next →';
+    doneBtn.addEventListener('click', () => {
+      if (!isLast) { activeExIdx++; renderFocus(); }
+      else { focusMode = false; overlay.remove(); render(); }
+    });
+
+    const nextNavBtn = el('button', 'focus-nav-btn');
+    nextNavBtn.textContent = 'Next ›';
+    nextNavBtn.disabled = isLast;
+    nextNavBtn.addEventListener('click', () => {
+      activeExIdx++;
+      renderFocus();
+    });
+
+    footer.appendChild(prevBtn);
+    footer.appendChild(doneBtn);
+    footer.appendChild(nextNavBtn);
+    overlay.appendChild(footer);
+
+    document.body.appendChild(overlay);
+  }
+
+  // ── Breadcrumb update (live) ──────────────────────────────────────────────
 
   function updateBreadcrumb(exerciseName) {
     const exercise = activeSession.exercises.find(e => e.name === exerciseName);
@@ -617,11 +564,10 @@
     crumb.querySelector('.crumb-icon').textContent = crumbIcon(state);
   }
 
-  // ── Swipe support ─────────────────────────────────────────────────────────
+  // ── Swipe ────────────────────────────────────────────────────────────────
 
   function setupSwipe(el) {
-    let startX = 0;
-    let startY = 0;
+    let startX = 0, startY = 0;
     el.addEventListener('touchstart', (e) => {
       startX = e.touches[0].clientX;
       startY = e.touches[0].clientY;
@@ -629,54 +575,50 @@
     el.addEventListener('touchend', (e) => {
       const dx = e.changedTouches[0].clientX - startX;
       const dy = e.changedTouches[0].clientY - startY;
-      if (Math.abs(dx) < Math.abs(dy) * 1.5) return; // vertical dominant
-      if (Math.abs(dx) < 50) return; // threshold
-      if (dx < 0 && activeExIdx < activeSession.exercises.length - 1) {
-        activeExIdx++;
-        render();
-      } else if (dx > 0 && activeExIdx > 0) {
-        activeExIdx--;
-        render();
-      }
+      if (Math.abs(dx) < Math.abs(dy) * 1.5 || Math.abs(dx) < 50) return;
+      if (dx < 0 && activeExIdx < activeSession.exercises.length - 1) { activeExIdx++; render(); }
+      else if (dx > 0 && activeExIdx > 0) { activeExIdx--; render(); }
     }, { passive: true });
   }
 
-  // ── Utilities ─────────────────────────────────────────────────────────────
+  // ── Phase switching ───────────────────────────────────────────────────────
 
-  function el(tag, className) {
-    const e = document.createElement(tag);
-    if (className) e.className = className;
-    return e;
+  function switchPhase(phaseName) {
+    if (!phasesData || !phasesData[phaseName]) return;
+    activePhaseName = phaseName;
+    data = {
+      name: phaseName,
+      backupDate: data.backupDate,
+      sessions: phasesData[phaseName]
+    };
+    activeSession = oldestSession(data.sessions.filter(s => s.lastDate)) || data.sessions[0];
+    activeExIdx = 0;
+    focusMode = false;
+    document.getElementById('focus-overlay')?.remove();
+    render();
   }
 
-  // ── Boot ──────────────────────────────────────────────────────────────────
+  // ── Boot ─────────────────────────────────────────────────────────────────
 
   async function boot() {
     const app = document.getElementById('app');
-
-    // Remove any stale timer pill from previous render
-    document.querySelectorAll('.rest-timer').forEach(t => t.remove());
-
     try {
-      const latestRes = await fetch('latest.json');
-      if (!latestRes.ok) throw new Error(`latest.json: ${latestRes.status}`);
-      const latest = await latestRes.json();
-
-      const dataRes = await fetch(latest.dataUrl);
-      if (!dataRes.ok) throw new Error(`backup: ${dataRes.status}`);
-      data = await dataRes.json();
-
-      // Load history (non-fatal)
-      try {
-        const histRes = await fetch('data/history.json');
-        if (histRes.ok) historyData = await histRes.json();
-      } catch (_) { /* history unavailable */ }
-
+      const latest = await fetch('latest.json').then(r => { if (!r.ok) throw new Error('latest.json ' + r.status); return r.json(); });
+      data = await fetch(latest.dataUrl).then(r => { if (!r.ok) throw new Error('backup ' + r.status); return r.json(); });
+      try { historyData = await fetch('data/history.json').then(r => r.ok ? r.json() : null); } catch {}
+      try { phasesData = await fetch('data/phases.json').then(r => r.ok ? r.json() : null); } catch {}
+      activePhaseName = data.name;
+      // Merge live data into phasesData so the selector includes Phase 4 with real lastDates
+      if (phasesData && !phasesData[data.name]) {
+        phasesData[data.name] = data.sessions;
+      } else if (phasesData) {
+        phasesData[data.name] = data.sessions; // always use live data for current phase
+      }
       activeSession = oldestSession(data.sessions);
       activeExIdx = 0;
       render();
     } catch (err) {
-      app.innerHTML = `<div class="error">Failed to load data:<br>${err.message}</div>`;
+      app.innerHTML = `<div class="error">Failed to load: ${err.message}</div>`;
     }
   }
 
