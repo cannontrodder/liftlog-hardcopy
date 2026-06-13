@@ -61,6 +61,20 @@
     });
   }
 
+  function recentExerciseHistory(sessionName, exerciseName, limit = 3) {
+    const sessions = historyData ? (historyData[sessionName] || []) : [];
+    return sessions
+      .filter(session => session.exercises.some(ex => ex.name === exerciseName))
+      .slice(0, limit)
+      .map(session => {
+        const entry = session.exercises.find(ex => ex.name === exerciseName);
+        return {
+          date: session.date,
+          done: entry ? entry.done : [],
+        };
+      });
+  }
+
   function el(tag, className) {
     const e = document.createElement(tag);
     if (className) e.className = className;
@@ -439,11 +453,12 @@
     const overlay = el('div', 'focus-overlay');
     overlay.id = 'focus-overlay';
 
-    // Top bar: ← Back   1/7   ⛶ Exit   [timer widget]
+    // Top bar: detail exit + progress
     const topBar = el('div', 'focus-top-bar');
 
     const backBtn = el('button', 'focus-back');
-    backBtn.innerHTML = '← Back';
+    backBtn.innerHTML = '← Detail mode';
+    backBtn.title = 'Exit focus mode';
     backBtn.addEventListener('click', () => {
       focusMode = false;
       overlay.remove();
@@ -455,7 +470,7 @@
     focusCounter.style.textAlign = 'center';
     focusCounter.textContent = `${activeExIdx + 1} / ${activeSession.exercises.length}`;
 
-    // Timer inline widget (same component, just positioned inline)
+    // Timer widget stays in focus mode but is moved into the content body
     const timerWrap = el('div', 'focus-timer-inline');
     const state = timerStateClass();
     if (state !== 'idle') timerWrap.classList.add(state);
@@ -480,7 +495,6 @@
 
     topBar.appendChild(backBtn);
     topBar.appendChild(focusCounter);
-    topBar.appendChild(timerWrap);
     overlay.appendChild(topBar);
 
     // Body
@@ -494,18 +508,102 @@
     targetDiv.textContent = `${exercise.sets} sets · ${exercise.repsPerSet} reps target`;
     body.appendChild(targetDiv);
 
-    if (exercise.last && exercise.last.length) {
+    const recentHistory = recentExerciseHistory(activeSession.name, exercise.name, 3);
+    if (recentHistory.length) {
+      const lastBox = el('div', 'focus-last');
+      const lastLabel = el('div', 'focus-last-label');
+      lastLabel.textContent = 'Last 3 sessions';
+      const lastList = el('div', 'focus-last-list');
+
+      recentHistory.forEach(session => {
+        const sessionBox = el('div', 'focus-last-session');
+        const sessionMeta = el('div', 'focus-last-session-meta');
+        sessionMeta.textContent = fmtDate(session.date);
+        const sessionSets = el('div', 'focus-last-session-sets');
+
+        session.done.forEach((set, idx) => {
+          const setCard = el('div', 'focus-last-set');
+          const setLabel = el('div', 'focus-last-set-label');
+          setLabel.textContent = `Set ${idx + 1}`;
+
+          const weightLine = el('div', 'focus-last-set-line');
+          const weightLabel = el('div', 'focus-last-metric-label');
+          weightLabel.textContent = 'Weight';
+          const weightValue = el('div', 'focus-last-metric-value');
+          weightValue.textContent = `${set.weight}kg`;
+          weightLine.appendChild(weightLabel);
+          weightLine.appendChild(weightValue);
+
+          const repsLine = el('div', 'focus-last-set-line');
+          const repsLabel = el('div', 'focus-last-metric-label');
+          repsLabel.textContent = 'Reps';
+          const repsValue = el('div', 'focus-last-metric-value');
+          repsValue.textContent = String(set.reps);
+          repsLine.appendChild(repsLabel);
+          repsLine.appendChild(repsValue);
+
+          setCard.appendChild(setLabel);
+          setCard.appendChild(weightLine);
+          setCard.appendChild(repsLine);
+          sessionSets.appendChild(setCard);
+        });
+
+        sessionBox.appendChild(sessionMeta);
+        sessionBox.appendChild(sessionSets);
+        lastList.appendChild(sessionBox);
+      });
+
+      lastBox.appendChild(lastLabel);
+      lastBox.appendChild(lastList);
+      body.appendChild(lastBox);
+    } else if (exercise.last && exercise.last.length) {
       const lastBox = el('div', 'focus-last');
       const lastLabel = el('div', 'focus-last-label');
       lastLabel.textContent = `Last time · ${fmtDate(activeSession.lastDate)}`;
-      const lastVal = el('div', 'focus-last-val');
-      lastVal.innerHTML = exercise.last.map((s, i) =>
-        `<strong>${s.weight}kg×${s.reps}</strong>`
-      ).join('  ');
+      const lastList = el('div', 'focus-last-list');
+      const sessionBox = el('div', 'focus-last-session');
+      const sessionSets = el('div', 'focus-last-session-sets');
+
+      exercise.last.forEach((set, idx) => {
+        const setCard = el('div', 'focus-last-set');
+        const setLabel = el('div', 'focus-last-set-label');
+        setLabel.textContent = `Set ${idx + 1}`;
+
+        const weightLine = el('div', 'focus-last-set-line');
+        const weightLabel = el('div', 'focus-last-metric-label');
+        weightLabel.textContent = 'Weight';
+        const weightValue = el('div', 'focus-last-metric-value');
+        weightValue.textContent = `${set.weight}kg`;
+        weightLine.appendChild(weightLabel);
+        weightLine.appendChild(weightValue);
+
+        const repsLine = el('div', 'focus-last-set-line');
+        const repsLabel = el('div', 'focus-last-metric-label');
+        repsLabel.textContent = 'Reps';
+        const repsValue = el('div', 'focus-last-metric-value');
+        repsValue.textContent = String(set.reps);
+        repsLine.appendChild(repsLabel);
+        repsLine.appendChild(repsValue);
+
+        setCard.appendChild(setLabel);
+        setCard.appendChild(weightLine);
+        setCard.appendChild(repsLine);
+        sessionSets.appendChild(setCard);
+      });
+
+      sessionBox.appendChild(sessionSets);
+      lastList.appendChild(sessionBox);
       lastBox.appendChild(lastLabel);
-      lastBox.appendChild(lastVal);
+      lastBox.appendChild(lastList);
       body.appendChild(lastBox);
     }
+
+    const restRow = el('div', 'focus-rest');
+    const restLabel = el('div', 'focus-rest-label');
+    restLabel.textContent = 'Rest timer';
+    restRow.appendChild(restLabel);
+    restRow.appendChild(timerWrap);
+    body.appendChild(restRow);
 
     const setsWrap = el('div', 'focus-sets');
     buildSetRows(exercise, () => timerStart(activeSession.targetRestSeconds || 90))
@@ -516,36 +614,33 @@
     body.appendChild(setsWrap);
     overlay.appendChild(body);
 
-    // Footer: prev / done / next
+    // Footer: prev / next
     const footer = el('div', 'focus-footer');
 
     const prevBtn = el('button', 'focus-nav-btn');
-    prevBtn.textContent = '‹ Prev';
+    prevBtn.textContent = '‹ Previous';
     prevBtn.disabled = activeExIdx === 0;
     prevBtn.addEventListener('click', () => {
       activeExIdx--;
       renderFocus();
     });
 
-    const doneBtn = el('button', 'focus-next-btn');
     const isLast = activeExIdx === activeSession.exercises.length - 1;
-    doneBtn.textContent = isLast ? 'Done ✓' : 'Next →';
-    doneBtn.addEventListener('click', () => {
-      if (!isLast) { activeExIdx++; renderFocus(); }
-      else { focusMode = false; overlay.remove(); render(); }
-    });
-
-    const nextNavBtn = el('button', 'focus-nav-btn');
-    nextNavBtn.textContent = 'Next ›';
-    nextNavBtn.disabled = isLast;
-    nextNavBtn.addEventListener('click', () => {
+    const nextBtn = el('button', 'focus-next-btn');
+    nextBtn.textContent = isLast ? 'Done ✓' : 'Next →';
+    nextBtn.addEventListener('click', () => {
+      if (isLast) {
+        focusMode = false;
+        overlay.remove();
+        render();
+        return;
+      }
       activeExIdx++;
       renderFocus();
     });
 
     footer.appendChild(prevBtn);
-    footer.appendChild(doneBtn);
-    footer.appendChild(nextNavBtn);
+    footer.appendChild(nextBtn);
     overlay.appendChild(footer);
 
     document.body.appendChild(overlay);
