@@ -1,0 +1,137 @@
+name: Refresh Backup
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.check.outputs.changed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || 'eu-west-1' }}
+
+      - name: Find newest .liftlog file in S3
+        id: find
+        env:
+          LIFTLOG_S3_BUCKET: ${{ secrets.LIFTLOG_S3_BUCKET }}
+          LIFTLOG_S3_PREFIX: ${{ secrets.LIFTLOG_S3_PREFIX || 'liftlog/' }}
+        run: |
+          NEWEST=$(aws s3 ls "s3://${LIFTLOG_S3_BUCKET}/${LIFTLOG_S3_PREFIX}" \
+            --recursive \
+            | grep '\.liftlog$' \
+            | sort -k1,2 \
+            | tail -1)
+
+          if [ -z "$NEWEST" ]; then
+            echo "No .liftlog files found in s3://${LIFTLOG_S3_BUCKET}/${LIFTLOG_S3_PREFIX}"
+            exit 1
+          fi
+
+          S3_KEY=$(echo "$NEWEST" | awk '{print $4}')
+          S3_DATE=$(echo "$NEWEST" | awk '{print $1 "T" $2 "Z"}')
+
+          echo "s3_key=${S3_KEY}" >> "$GITHUB_OUTPUT"
+          echo "s3_date=${S3_DATE}" >> "$GITHUB_OUTPUT"
+          echo "Found: s3://${LIFTLOG_S3_BUCKET}/${S3_KEY} (${S3_DATE})"
+
+      - name: Check ETag against stored value
+        id: check
+        env:
+          LIFTLOG_S3_BUCKET: ${{ secrets.LIFTLOG_S3_BUCKET }}
+        run: |
+          S3_KEY="${{ steps.find.outputs.s3_key }}"
+          CURRENT_ETAG=$(aws s3api head-object \
+            --bucket "${LIFTLOG_S3_BUCKET}" \
+            --key "${S3_KEY}" \
+            --query 'ETag' \
+            --output text | tr -d '"')
+
+          STORED_ETAG=$(cat data/.backup-etag 2>/dev/null || echo "none")
+          echo "Current ETag: ${CURRENT_ETAG}"
+          echo "Stored ETag:  ${STORED_ETAG}"
+
+          if [ "$CURRENT_ETAG" = "$STORED_ETAG" ]; then
+            echo "Backup unchanged — skipping update."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Backup has changed — proceeding with update."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "etag=${CURRENT_ETAG}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download and decompress backup
+        if: steps.check.outputs.changed == 'true'
+        env:
+          LIFTLOG_S3_BUCKET: ${{ secrets.LIFTLOG_S3_BUCKET }}
+        run: |
+          S3_KEY="${{ steps.find.outputs.s3_key }}"
+          aws s3 cp "s3://${LIFTLOG_S3_BUCKET}/${S3_KEY}" backup.liftlog
+          gunzip -c backup.liftlog > data/backup.json
+          echo "Decompressed $(wc -c < data/backup.json) bytes to data/backup.json"
+
+      - name: Update metadata files
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          echo "${{ steps.check.outputs.etag }}" > data/.backup-etag
+
+          ISO_TIMESTAMP="${{ steps.find.outputs.s3_date }}"
+          cat > latest.json <<EOF
+          {
+            "dataUrl": "data/backup.json",
+            "updatedAt": "${ISO_TIMESTAMP}"
+          }
+          EOF
+
+      - name: Commit and push updated files
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/backup.json data/.backup-etag latest.json
+          git commit -m "chore: refresh backup data [$(date -u +%Y-%m-%dT%H:%M:%SZ)]"
+          git push
+
+  deploy:
+    needs: refresh
+    if: needs.refresh.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

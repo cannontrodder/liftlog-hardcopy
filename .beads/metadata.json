@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "liftlog_hardcopy",
+  "project_id": "372d0e71-61a2-4c36-a596-df2daf99048c"
+}
