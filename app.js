@@ -61,18 +61,17 @@
     });
   }
 
-  function recentExerciseHistory(sessionName, exerciseName, limit = 3) {
+  function latestExerciseHistory(sessionName, exerciseName) {
     const sessions = historyData ? (historyData[sessionName] || []) : [];
-    return sessions
-      .filter(session => session.exercises.some(ex => ex.name === exerciseName))
-      .slice(0, limit)
-      .map(session => {
-        const entry = session.exercises.find(ex => ex.name === exerciseName);
-        return {
-          date: session.date,
-          done: entry ? entry.done : [],
-        };
-      });
+    const session = sessions.find(entry => entry.exercises.some(ex => ex.name === exerciseName));
+    if (session) {
+      const entry = session.exercises.find(ex => ex.name === exerciseName);
+      return {
+        date: session.date,
+        done: entry ? entry.done : [],
+      };
+    }
+    return null;
   }
 
   function el(tag, className) {
@@ -508,63 +507,19 @@
     targetDiv.textContent = `${exercise.sets} sets · ${exercise.repsPerSet} reps target`;
     body.appendChild(targetDiv);
 
-    const recentHistory = recentExerciseHistory(activeSession.name, exercise.name, 3);
-    if (recentHistory.length) {
+    const latestHistory = latestExerciseHistory(activeSession.name, exercise.name);
+    const latestSets = latestHistory ? latestHistory.done : exercise.last;
+    if (latestSets && latestSets.length) {
       const lastBox = el('div', 'focus-last');
       const lastLabel = el('div', 'focus-last-label');
-      lastLabel.textContent = 'Last 3 sessions';
-      const lastList = el('div', 'focus-last-list');
-
-      recentHistory.forEach(session => {
-        const sessionBox = el('div', 'focus-last-session');
-        const sessionMeta = el('div', 'focus-last-session-meta');
-        sessionMeta.textContent = fmtDate(session.date);
-        const sessionSets = el('div', 'focus-last-session-sets');
-
-        session.done.forEach((set, idx) => {
-          const setCard = el('div', 'focus-last-set');
-          const setLabel = el('div', 'focus-last-set-label');
-          setLabel.textContent = `Set ${idx + 1}`;
-
-          const weightLine = el('div', 'focus-last-set-line');
-          const weightLabel = el('div', 'focus-last-metric-label');
-          weightLabel.textContent = 'Weight';
-          const weightValue = el('div', 'focus-last-metric-value');
-          weightValue.textContent = `${set.weight}kg`;
-          weightLine.appendChild(weightLabel);
-          weightLine.appendChild(weightValue);
-
-          const repsLine = el('div', 'focus-last-set-line');
-          const repsLabel = el('div', 'focus-last-metric-label');
-          repsLabel.textContent = 'Reps';
-          const repsValue = el('div', 'focus-last-metric-value');
-          repsValue.textContent = String(set.reps);
-          repsLine.appendChild(repsLabel);
-          repsLine.appendChild(repsValue);
-
-          setCard.appendChild(setLabel);
-          setCard.appendChild(weightLine);
-          setCard.appendChild(repsLine);
-          sessionSets.appendChild(setCard);
-        });
-
-        sessionBox.appendChild(sessionMeta);
-        sessionBox.appendChild(sessionSets);
-        lastList.appendChild(sessionBox);
-      });
-
-      lastBox.appendChild(lastLabel);
-      lastBox.appendChild(lastList);
-      body.appendChild(lastBox);
-    } else if (exercise.last && exercise.last.length) {
-      const lastBox = el('div', 'focus-last');
-      const lastLabel = el('div', 'focus-last-label');
-      lastLabel.textContent = `Last time · ${fmtDate(activeSession.lastDate)}`;
+      lastLabel.textContent = latestHistory ? `Last time · ${fmtDate(latestHistory.date)}` : `Last time · ${fmtDate(activeSession.lastDate)}`;
       const lastList = el('div', 'focus-last-list');
       const sessionBox = el('div', 'focus-last-session');
+      const sessionMeta = el('div', 'focus-last-session-meta');
+      sessionMeta.textContent = latestHistory ? fmtDate(latestHistory.date) : fmtDate(activeSession.lastDate);
       const sessionSets = el('div', 'focus-last-session-sets');
 
-      exercise.last.forEach((set, idx) => {
+      latestSets.forEach((set, idx) => {
         const setCard = el('div', 'focus-last-set');
         const setLabel = el('div', 'focus-last-set-label');
         setLabel.textContent = `Set ${idx + 1}`;
@@ -591,6 +546,7 @@
         sessionSets.appendChild(setCard);
       });
 
+      sessionBox.appendChild(sessionMeta);
       sessionBox.appendChild(sessionSets);
       lastList.appendChild(sessionBox);
       lastBox.appendChild(lastLabel);
