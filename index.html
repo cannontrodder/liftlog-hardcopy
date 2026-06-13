@@ -1,231 +1,477 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LiftLog Hard Copy Review</title>
-    <style>
-      :root {
-        color-scheme: dark;
-        --bg: #091118;
-        --bg-2: #0f1d27;
-        --card: rgba(14, 23, 31, 0.92);
-        --ink: #edf6f0;
-        --muted: #9cafaa;
-        --line: rgba(255, 255, 255, 0.08);
-        --accent: #58d0b2;
-        --accent-2: #e8c36c;
-        --shadow: 0 26px 80px rgba(0, 0, 0, 0.4);
-      }
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LiftLog</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-      * { box-sizing: border-box; }
-      html, body { width: 100%; height: 100%; margin: 0; }
-      body {
-        color: var(--ink);
-        background:
-          radial-gradient(circle at 10% 0%, rgba(88, 208, 178, 0.16), transparent 18%),
-          radial-gradient(circle at 100% 10%, rgba(232, 195, 108, 0.12), transparent 18%),
-          linear-gradient(180deg, var(--bg), var(--bg-2));
-        font-family: "Trebuchet MS", "Gill Sans", sans-serif;
-        overflow: hidden;
-      }
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --surface2: #242424;
+      --border: #2e2e2e;
+      --text: #e8e8e8;
+      --text-muted: #888;
+      --accent: #4ade80;
+      --accent-dim: #166534;
+      --next-badge: #facc15;
+      --partial: #fb923c;
+      --danger: #f87171;
+      --timer-idle: #3a3a3a;
+      --timer-active: #4ade80;
+      --timer-warning: #fb923c;
+      --timer-done: #facc15;
+    }
 
-      .shell {
-        display: grid;
-        grid-template-rows: auto auto 1fr;
-        width: 100%;
-        height: 100%;
-        gap: 10px;
-        padding: 12px;
-      }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      line-height: 1.4;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
 
-      .header,
-      .set-switcher {
-        border: 1px solid var(--line);
-        background: var(--card);
-        box-shadow: var(--shadow);
-        backdrop-filter: blur(16px);
-      }
+    #app { max-width: 480px; margin: 0 auto; padding: 0 0 100px; }
 
-      .header {
-        border-radius: 24px;
-        padding: 14px 16px;
-        display: flex;
-        justify-content: space-between;
-        align-items: start;
-        gap: 16px;
-      }
+    /* ── Header ─────────────────────────────────────────────────── */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .header-title { font-size: 12px; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; }
+    .header-row { display: flex; align-items: baseline; gap: 8px; margin-top: 2px; }
+    .header-name { font-size: 19px; font-weight: 700; }
+    .header-date { font-size: 13px; color: var(--text-muted); font-weight: 400; }
 
-      .kicker {
-        margin: 0 0 6px;
-        color: var(--accent);
-        text-transform: uppercase;
-        letter-spacing: 0.16em;
-        font: 800 10px/1.2 "Trebuchet MS", "Gill Sans", sans-serif;
-      }
+    /* ── Session tabs ────────────────────────────────────────────── */
+    .session-tabs {
+      display: flex;
+      gap: 8px;
+      padding: 10px 16px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .session-tabs::-webkit-scrollbar { display: none; }
 
-      h1, p { margin: 0; }
+    .session-tab {
+      flex-shrink: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 11px;
+      cursor: pointer;
+      text-align: left;
+      color: var(--text);
+      transition: border-color 0.15s;
+    }
+    .session-tab.active {
+      border-color: var(--accent);
+      background: var(--surface);
+    }
+    .session-tab-name { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .session-tab-date { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+    .next-badge {
+      display: inline-block;
+      background: var(--next-badge);
+      color: #000;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      padding: 1px 4px;
+      border-radius: 3px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
 
-      h1 {
-        font-size: clamp(1.3rem, 3.8vw, 2rem);
-        letter-spacing: -0.04em;
-        line-height: 1.1;
-      }
+    /* ── Breadcrumb (exercise progress dots) ─────────────────────── */
+    .breadcrumb {
+      padding: 8px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      border-bottom: 1px solid var(--border);
+    }
+    .crumb {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      color: var(--text-muted);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 3px 6px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .crumb:hover { border-color: var(--text-muted); }
+    .crumb.active-crumb { border-color: var(--text-muted); color: var(--text); }
+    .crumb.partial { color: var(--partial); border-color: var(--partial); }
+    .crumb.complete { color: var(--accent); border-color: var(--accent-dim); }
+    .crumb-icon { font-size: 11px; }
+    .crumb-label { max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-      .lede {
-        margin-top: 4px;
-        color: var(--muted);
-        font: 500 0.92rem/1.45 "Trebuchet MS", "Gill Sans", sans-serif;
-        max-width: 58ch;
-      }
+    /* ── Exercise navigator ──────────────────────────────────────── */
+    .exercise-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 18px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.1s, border-color 0.1s;
+    }
+    .nav-btn:hover { background: var(--surface); border-color: var(--text-muted); }
+    .nav-btn:disabled { opacity: 0.3; cursor: default; }
+    .nav-counter {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
 
-      .meta {
-        display: grid;
-        gap: 8px;
-        text-align: right;
-        color: var(--muted);
-        font: 700 0.72rem/1.3 "Trebuchet MS", "Gill Sans", sans-serif;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-      }
+    /* ── Exercise card ───────────────────────────────────────────── */
+    .exercise-area { padding: 12px 16px; }
 
-      .meta strong {
-        display: block;
-        color: var(--ink);
-        font-size: 1rem;
-        text-transform: none;
-        letter-spacing: -0.02em;
-      }
+    .exercise-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .exercise-header {
+      padding: 12px 14px 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .exercise-header-left { flex: 1; min-width: 0; }
+    .exercise-name { font-size: 15px; font-weight: 700; line-height: 1.3; }
+    .exercise-meta { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+    .exercise-header-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .icon-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-size: 14px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .icon-btn:hover { color: var(--text); border-color: var(--text-muted); }
 
-      .set-switcher {
-        border-radius: 20px;
-        padding: 10px;
-        display: grid;
-        gap: 10px;
-      }
+    /* ── Sets grid ───────────────────────────────────────────────── */
+    .sets-grid {
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .set-row {
+      display: grid;
+      grid-template-columns: 22px 1fr 28px 1fr;
+      align-items: center;
+      gap: 6px;
+    }
+    .set-num {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-align: center;
+    }
+    .set-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .set-input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
+      padding: 8px 6px;
+      width: 100%;
+      text-align: center;
+      -moz-appearance: textfield;
+    }
+    .set-input::-webkit-outer-spin-button,
+    .set-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .set-input:focus { outline: none; border-color: var(--accent); }
+    .set-input.filled { border-color: var(--accent-dim); color: var(--accent); }
+    .set-unit {
+      font-size: 11px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .set-sep {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
 
-      .set-switcher__row {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
+    /* ── History overlay ─────────────────────────────────────────── */
+    .overlay-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 50;
+      display: flex;
+      align-items: flex-end;
+    }
+    .history-sheet {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px 16px 0 0;
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 16px;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    .sheet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .sheet-title { font-size: 15px; font-weight: 700; }
+    .sheet-close {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-size: 14px;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .history-row {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .history-row:last-child { border-bottom: none; }
+    .history-date { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+    .history-sets { color: var(--text); }
+    .history-sets span { color: var(--accent); font-weight: 600; }
+    .history-empty { color: var(--text-muted); font-size: 13px; padding: 8px 0; }
 
-      .set-switcher button {
-        border: 1px solid rgba(255,255,255,0.08);
-        background: rgba(255,255,255,0.04);
-        color: var(--ink);
-        border-radius: 999px;
-        padding: 10px 14px;
-        font: 800 0.78rem/1 "Trebuchet MS", "Gill Sans", sans-serif;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-      }
+    /* ── Focus mode overlay ──────────────────────────────────────── */
+    .focus-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 60;
+      display: flex;
+      flex-direction: column;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .focus-top-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .focus-back {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 15px;
+      padding: 6px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .focus-timer-inline {
+      font-size: 20px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--timer-active);
+      min-width: 60px;
+      text-align: right;
+    }
+    .focus-timer-inline.idle { color: var(--text-muted); font-size: 14px; }
+    .focus-timer-inline.warning { color: var(--timer-warning); }
+    .focus-timer-inline.done { color: var(--timer-done); }
+    .focus-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .focus-name {
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    .focus-target {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .focus-last {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+    }
+    .focus-last-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .focus-last-val { color: var(--text); }
+    .focus-last-val strong { color: var(--accent); }
+    .focus-sets { display: flex; flex-direction: column; gap: 10px; }
+    .focus-set-row {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: grid;
+      grid-template-columns: 22px 1fr 28px 1fr;
+      align-items: center;
+      gap: 8px;
+    }
+    .focus-set-row .set-input {
+      font-size: 18px;
+      padding: 10px 6px;
+    }
+    .focus-footer {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .focus-next-btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 14px;
+      width: 100%;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+    }
+    .focus-next-btn:disabled { background: var(--surface2); color: var(--text-muted); cursor: default; }
 
-      .set-switcher button.is-active {
-        background: rgba(88, 208, 178, 0.16);
-        border-color: rgba(88, 208, 178, 0.28);
-        color: #eaf9f3;
-      }
+    /* ── Floating rest timer ─────────────────────────────────────── */
+    .rest-timer {
+      position: fixed;
+      bottom: 20px;
+      right: 16px;
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .timer-pill {
+      background: var(--timer-idle);
+      border: 2px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 16px;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s, border-color 0.2s;
+      min-width: 80px;
+      justify-content: center;
+    }
+    .timer-pill.active { background: #0d2b1a; border-color: var(--accent); }
+    .timer-pill.warning { background: #2b1500; border-color: var(--timer-warning); }
+    .timer-pill.done { background: #2b2500; border-color: var(--timer-done); }
+    .timer-icon { font-size: 16px; }
+    .timer-text {
+      font-size: 17px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-muted);
+    }
+    .timer-pill.active .timer-text { color: var(--timer-active); }
+    .timer-pill.warning .timer-text { color: var(--timer-warning); }
+    .timer-pill.done .timer-text { color: var(--timer-done); }
 
-      .set-switcher p {
-        color: var(--muted);
-        font: 500 0.88rem/1.45 "Trebuchet MS", "Gill Sans", sans-serif;
-      }
+    .timer-popover {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 140px;
+    }
+    .timer-popover-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .timer-presets { display: flex; gap: 6px; flex-wrap: wrap; }
+    .timer-preset-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    .timer-preset-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-      iframe {
-        width: 100%;
-        height: 100%;
-        border: 0;
-        border-radius: 28px;
-        background: #fff;
-        box-shadow: var(--shadow);
-      }
+    /* ── Loading/error ───────────────────────────────────────────── */
+    .loading { padding: 40px 16px; text-align: center; color: var(--text-muted); }
+    .error { padding: 40px 16px; text-align: center; color: var(--danger); }
 
-      @media (max-width: 720px) {
-        body { overflow: auto; }
-        .shell { height: auto; min-height: 100%; }
-        iframe { min-height: 82vh; }
-        .header { flex-direction: column; }
-        .meta { text-align: left; }
-      }
-    </style>
-  </head>
-  <body>
-    <main class="shell">
-      <header class="header">
-        <div>
-          <p class="kicker">LiftLog hard copy review</p>
-          <h1>Two spikes, one review surface</h1>
-          <p class="lede">
-            Pick the set on top, then use the inner variant controls inside the embedded page.
-            Both implementations are preserved side by side so nothing gets lost.
-          </p>
-        </div>
-        <aside class="meta">
-          <strong id="current-set">Analysis set</strong>
-          <span id="current-note">3 variants, analysis-driven story and charts</span>
-        </aside>
-      </header>
-
-      <section class="set-switcher" aria-label="Prototype set selector">
-        <div class="set-switcher__row">
-          <button type="button" data-set="analysis">Analysis Set</button>
-          <button type="button" data-set="classic">Classic Set</button>
-        </div>
-        <p>
-          Analysis set: the richer backup story and charts. Classic set: the earlier 3-variant hard-copy spike.
-        </p>
-      </section>
-
-      <iframe id="prototype" title="LiftLog prototype set"></iframe>
-    </main>
-
-    <script>
-      const sets = {
-        analysis: {
-          label: "Analysis set",
-          note: "3 variants, analysis-driven story and charts",
-          path: "analysis/index.html",
-        },
-        classic: {
-          label: "Classic set",
-          note: "3 variants, earlier tested hard-copy spike",
-          path: "classic/index.html",
-        },
-      };
-
-      const params = new URLSearchParams(location.search);
-      const state = {
-        set: params.get("set") === "classic" ? "classic" : "analysis",
-        variant: params.get("variant") || "a",
-      };
-
-      const frame = document.getElementById("prototype");
-      const currentSet = document.getElementById("current-set");
-      const currentNote = document.getElementById("current-note");
-      const buttons = [...document.querySelectorAll("[data-set]")];
-
-      function render() {
-        const selected = sets[state.set];
-        frame.src = `${selected.path}?variant=${encodeURIComponent(state.variant)}`;
-        currentSet.textContent = selected.label;
-        currentNote.textContent = selected.note;
-        buttons.forEach((button) => {
-          button.classList.toggle("is-active", button.dataset.set === state.set);
-        });
-        params.set("set", state.set);
-        params.set("variant", state.variant);
-        history.replaceState(null, "", `${location.pathname}?${params.toString()}`);
-      }
-
-      buttons.forEach((button) => {
-        button.addEventListener("click", () => {
-          state.set = button.dataset.set;
-          render();
-        });
-      });
-
-      render();
-    </script>
-  </body>
+    /* ── Touch swipe hint ─────────────────────────────────────────── */
+    @media (pointer: coarse) {
+      .exercise-area { touch-action: pan-y; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="loading">Loading…</div>
+  </div>
+  <script src="app.js"></script>
+</body>
 </html>

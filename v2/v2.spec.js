@@ -1,7 +1,7 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
 
-const PAGE = '/v2/index.html';
+const PAGE = '/index.html';
 
 // Clear localStorage before each test for isolation
 test.beforeEach(async ({ page }) => {
@@ -9,43 +9,41 @@ test.beforeEach(async ({ page }) => {
   await page.evaluate(() => localStorage.clear());
 });
 
-test('page loads and defaults to oldest-lastDate session (Legs)', async ({ page }) => {
+test('page loads and defaults to oldest-lastDate session (Push)', async ({ page }) => {
   await page.goto(PAGE);
-  // Legs has lastDate 2026-06-04 — the oldest
-  await expect(page.locator('.header-name')).toContainText('Legs');
+  // Push has lastDate 2026-06-08 — the oldest
+  await expect(page.locator('.header-name')).toContainText('Push');
   // At least one exercise card visible
   await expect(page.locator('.exercise-card').first()).toBeVisible();
 });
 
-test('NEXT badge appears on the Legs session tab', async ({ page }) => {
+test('NEXT badge appears on the Push session tab', async ({ page }) => {
   await page.goto(PAGE);
-  // The tab for Legs should have the NEXT badge
-  const legsTab = page.locator('.session-tab', { hasText: 'Legs' });
-  await expect(legsTab.locator('.next-badge')).toBeVisible();
-  await expect(legsTab.locator('.next-badge')).toContainText('NEXT');
-});
-
-test('NEXT badge does NOT appear on Push tab', async ({ page }) => {
-  await page.goto(PAGE);
+  // Push has the oldest lastDate so gets NEXT badge
   const pushTab = page.locator('.session-tab', { hasText: 'Push' });
-  await expect(pushTab.locator('.next-badge')).toHaveCount(0);
+  await expect(pushTab.locator('.next-badge')).toBeVisible();
+  await expect(pushTab.locator('.next-badge')).toContainText('NEXT');
 });
 
-test('filling a rep input persists after reload', async ({ page }) => {
+test('NEXT badge does NOT appear on Pull tab', async ({ page }) => {
+  await page.goto(PAGE);
+  const pullTab = page.locator('.session-tab', { hasText: 'Pull' });
+  await expect(pullTab.locator('.next-badge')).toHaveCount(0);
+});
+
+test('filling a reps input persists after reload', async ({ page }) => {
   await page.goto(PAGE);
 
-  // Find the first rep input and fill it
-  const firstInput = page.locator('.rep-input').first();
-  await firstInput.fill('8');
-  // Trigger input event
-  await firstInput.dispatchEvent('input');
+  // Find the first reps input and fill it
+  const firstRepsInput = page.locator('[data-field="reps"]').first();
+  await firstRepsInput.fill('8');
+  await firstRepsInput.dispatchEvent('input');
 
   // Reload and check value persists
   await page.reload();
-  // Wait for app to load
   await expect(page.locator('.exercise-card').first()).toBeVisible();
 
-  const restoredInput = page.locator('.rep-input').first();
+  const restoredInput = page.locator('[data-field="reps"]').first();
   await expect(restoredInput).toHaveValue('8');
 });
 
@@ -56,10 +54,10 @@ test('breadcrumb shows ◐ after partial fill (one of two sets)', async ({ page 
   const firstCard = page.locator('.exercise-card').first();
   const exerciseName = await firstCard.locator('.exercise-name').textContent();
 
-  // Fill only the first set of the first exercise
-  const inputs = firstCard.locator('.rep-input');
-  await inputs.first().fill('5');
-  await inputs.first().dispatchEvent('input');
+  // Fill only the first set's reps input
+  const repsInputs = firstCard.locator('[data-field="reps"]');
+  await repsInputs.first().fill('5');
+  await repsInputs.first().dispatchEvent('input');
 
   // Breadcrumb for that exercise should show ◐
   const crumb = page.locator(`[data-crumb="${exerciseName}"]`);
@@ -73,12 +71,12 @@ test('breadcrumb shows ✓ after all sets filled', async ({ page }) => {
   const firstCard = page.locator('.exercise-card').first();
   const exerciseName = await firstCard.locator('.exercise-name').textContent();
 
-  // Fill all sets of the first exercise (exercises have sets=2 or more)
-  const inputs = firstCard.locator('.rep-input');
-  const count = await inputs.count();
+  // Fill all reps inputs for this exercise
+  const repsInputs = firstCard.locator('[data-field="reps"]');
+  const count = await repsInputs.count();
   for (let i = 0; i < count; i++) {
-    await inputs.nth(i).fill('6');
-    await inputs.nth(i).dispatchEvent('input');
+    await repsInputs.nth(i).fill('6');
+    await repsInputs.nth(i).dispatchEvent('input');
   }
 
   const crumb = page.locator(`[data-crumb="${exerciseName}"]`);
@@ -91,13 +89,13 @@ test('breadcrumb state persists after reload', async ({ page }) => {
 
   const firstCard = page.locator('.exercise-card').first();
   const exerciseName = await firstCard.locator('.exercise-name').textContent();
-  const inputs = firstCard.locator('.rep-input');
-  const count = await inputs.count();
+  const repsInputs = firstCard.locator('[data-field="reps"]');
+  const count = await repsInputs.count();
 
-  // Fill all sets
+  // Fill all reps sets
   for (let i = 0; i < count; i++) {
-    await inputs.nth(i).fill('7');
-    await inputs.nth(i).dispatchEvent('input');
+    await repsInputs.nth(i).fill('7');
+    await repsInputs.nth(i).dispatchEvent('input');
   }
 
   // Reload
