@@ -50,3 +50,11 @@ bd close <id>         # Complete work
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
 <!-- END BEADS INTEGRATION -->
+
+## Build, Test, Deploy
+
+- Install dependencies with `npm ci`.
+- Run the smoke suite with `npm run test:mobile`.
+- The published site is the repository root. `index.html` and `app.js` are what GitHub Pages serves.
+- GitHub Pages deployment is automatic: push or merge to `main`, then the `.github/workflows/deploy-pages.yml` workflow publishes the site.
+- There is no separate manual deploy script in the repo today; wait for the `Deploy Pages` Actions run after `main` updates.
