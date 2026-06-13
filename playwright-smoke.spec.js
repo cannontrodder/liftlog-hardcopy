@@ -1,23 +1,19 @@
 const { expect, test } = require("@playwright/test");
 
-test.describe("LiftLog hard copy review shell", () => {
-  test("switches between the two preserved prototype sets", async ({ page }) => {
-    await page.goto("/index.html?set=analysis&variant=b");
+test.describe("LiftLog home page", () => {
+  test("boots the workout view and opens focus mode", async ({ page }) => {
+    await page.goto("/index.html");
 
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Two spikes, one review surface");
-    await expect(page.locator("#current-set")).toHaveText("Analysis set");
-    await expect(page.locator("#prototype")).toHaveAttribute(
-      "src",
-      /analysis\/index\.html\?variant=b/
-    );
+    await expect(page.locator(".header-title")).toHaveText("Kyle Phase 4");
+    await expect(page.locator(".header-name")).toHaveText("Push");
+    await expect(page.locator(".session-tabs .session-tab")).toHaveCount(4);
+    await expect(page.locator(".nav-focus-btn")).toBeVisible();
 
-    await page.getByRole("button", { name: "Classic Set" }).click();
+    await page.locator(".nav-focus-btn").click();
 
-    await expect(page.locator("#current-set")).toHaveText("Classic set");
-    await expect(page.locator("#prototype")).toHaveAttribute(
-      "src",
-      /classic\/index\.html\?variant=b/
-    );
+    await expect(page.locator("#focus-overlay")).toBeVisible();
+    await expect(page.locator(".focus-back")).toHaveText("← Detail mode");
+    await expect(page.locator(".focus-footer button")).toHaveCount(2);
   });
 });
 
