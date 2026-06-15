@@ -807,6 +807,11 @@
   <div id="app">
     <div class="loading">Loading…</div>
   </div>
-  <script src="app.js"></script>
+  <script>
+    // Cache-bust the workout bundle so new deploys show up on the next visit.
+    const script = document.createElement('script');
+    script.src = `app.js?v=${Date.now()}`;
+    document.body.appendChild(script);
+  </script>
 </body>
 </html>
