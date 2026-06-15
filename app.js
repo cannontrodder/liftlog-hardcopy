@@ -211,21 +211,12 @@
   }
 
   function workingWeightForExercise(exercise) {
-    const savedWeights = [];
-    for (let i = 0; i < exercise.sets; i++) {
-      const saved = loadField(activeSession.name, exercise.name, i, 'weight');
-      const parsed = parseKg(saved);
-      if (parsed != null) savedWeights.push(parsed);
-    }
-    if (savedWeights.length > 0) {
-      return Math.max(...savedWeights);
-    }
+    const savedFirstSet = parseKg(loadField(activeSession.name, exercise.name, 0, 'weight'));
+    if (savedFirstSet != null) return savedFirstSet;
     const lastWeights = (exercise.last || [])
       .map(set => parseKg(set.weight))
       .filter(weight => weight != null);
-    if (lastWeights.length > 0) {
-      return Math.max(...lastWeights);
-    }
+    if (lastWeights.length > 0) return lastWeights[0];
     return null;
   }
 
@@ -482,6 +473,7 @@
         updateSetDelta(delta, w, r, lastWeight, lastReps);
         rInput.dataset.previousValue = r;
         if (previousR === '' && r !== '' && typeof onRepEntered === 'function') onRepEntered();
+        if (i === 0) refreshWarmupPanel(exercise);
         updateBreadcrumb(exercise.name);
         if (i === exercise.sets - 1 && r !== '') onLastSetFilled();
       };
@@ -603,6 +595,17 @@
     });
     panel.appendChild(rows);
     return panel;
+  }
+
+  function refreshWarmupPanel(exercise) {
+    const currentPanel = document.querySelector('.warmup-panel');
+    if (!currentPanel) return;
+    const nextPanel = renderWarmupPanel(exercise);
+    if (!nextPanel) {
+      currentPanel.remove();
+      return;
+    }
+    currentPanel.replaceWith(nextPanel);
   }
 
   // ── Main render ──────────────────────────────────────────────────────────
