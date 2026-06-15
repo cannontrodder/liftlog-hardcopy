@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "start": "node serve.js",
+    "test:converter": "node --test scripts/convert-backup.test.mjs",
     "test:mobile": "playwright test playwright-smoke.spec.js"
   },
   "devDependencies": {

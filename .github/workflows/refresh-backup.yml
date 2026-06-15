@@ -79,15 +79,21 @@ jobs:
             echo "etag=${CURRENT_ETAG}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Download and decompress backup
+      - name: Download and convert backup for the browser
         if: steps.check.outputs.changed == 'true'
         env:
           LIFTLOG_S3_BUCKET: ${{ secrets.LIFTLOG_S3_BUCKET }}
         run: |
           S3_KEY="${{ steps.find.outputs.s3_key }}"
           aws s3 cp "s3://${LIFTLOG_S3_BUCKET}/${S3_KEY}" backup.gz
-          gunzip -c backup.gz > data/backup.json
-          echo "Decompressed $(wc -c < data/backup.json) bytes to data/backup.json"
+          gunzip -c backup.gz > backup.source
+
+          BACKUP_DATE="${{ steps.find.outputs.s3_date }}"
+          command -v sqlite3 >/dev/null || sudo apt-get install -y sqlite3
+          cp data/backup.json previous-backup.json
+          node scripts/convert-backup.mjs backup.source data/backup.json "${BACKUP_DATE%%T*}" previous-backup.json
+          node --test scripts/convert-backup.test.mjs
+          echo "Converted backup to $(wc -c < data/backup.json)-byte browser JSON"
 
       - name: Update metadata files
         if: steps.check.outputs.changed == 'true'
