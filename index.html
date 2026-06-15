@@ -540,6 +540,10 @@
       position: relative;
       width: 100%;
       z-index: 2;
+      transform: scale(var(--focus-scale, 1));
+      transform-origin: center top;
+      transition: transform 0.95s linear, background 0.2s, color 0.2s;
+      will-change: transform;
     }
     .focus-timer-text {
       appearance: none;
@@ -571,6 +575,19 @@
     .focus-timer-inline .timer-edit-btn:hover {
       border-color: #000;
       color: #000;
+    }
+    .focus-overlay.timer-complete-blink {
+      animation: focus-end-blink 1.2s ease-out 1;
+    }
+    @keyframes focus-end-blink {
+      0%, 100% { filter: brightness(1) saturate(1); }
+      12% { filter: brightness(1.7) saturate(1.2); }
+      24% { filter: brightness(0.8) saturate(0.9); }
+      36% { filter: brightness(1.7) saturate(1.2); }
+      48% { filter: brightness(0.8) saturate(0.9); }
+      60% { filter: brightness(1.7) saturate(1.2); }
+      72% { filter: brightness(0.8) saturate(0.9); }
+      84% { filter: brightness(1.4) saturate(1.1); }
     }
     .timer-edit-btn {
       background: var(--surface2);

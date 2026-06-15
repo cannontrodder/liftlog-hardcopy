@@ -252,7 +252,34 @@
     // Best effort: iPhone Safari support is inconsistent, but this is harmless
     // when vibration is unavailable.
     if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
-      navigator.vibrate([120, 60, 120]);
+      navigator.vibrate([240, 80, 240, 80, 420]);
+    }
+  }
+
+  function focusTimerScale() {
+    if (!timer.running) return 1;
+    if (timer.duration <= 0) return 1;
+    const progress = Math.max(0, Math.min(1, timer.remaining / timer.duration));
+    return 1 + (2 * progress);
+  }
+
+  function focusOverlay() {
+    return document.getElementById('focus-overlay');
+  }
+
+  function setFocusBlink(active) {
+    const overlay = focusOverlay();
+    if (!overlay) return;
+    if (active) {
+      overlay.classList.remove('timer-complete-blink');
+      // Restart the animation each time the timer finishes.
+      void overlay.offsetWidth;
+      overlay.classList.add('timer-complete-blink');
+      setTimeout(() => {
+        overlay.classList.remove('timer-complete-blink');
+      }, 1200);
+    } else {
+      overlay.classList.remove('timer-complete-blink');
     }
   }
 
@@ -271,6 +298,7 @@
         clearInterval(timer.interval);
         timer.interval = null;
         signalTimerComplete();
+        setFocusBlink(true);
         updateAllTimers('done');
         setTimeout(() => { if (!timer.running) updateAllTimers('idle'); }, 2500);
         return;
@@ -320,6 +348,11 @@
     if (inlineWrap && inlineText) {
       inlineWrap.className = `focus-timer-inline ${state !== 'idle' ? state : ''}`.trim();
       inlineText.textContent = timerDisplayText(state);
+      inlineWrap.style.setProperty('--focus-scale', String(focusTimerScale()));
+      inlineWrap.dataset.timerState = state;
+    }
+    if (state === 'idle') {
+      setFocusBlink(false);
     }
   }
 
@@ -911,6 +944,7 @@
     overlay.appendChild(footer);
 
     document.body.appendChild(overlay);
+    updateAllTimers(timerStateClass());
   }
 
   // ── Breadcrumb update (live) ──────────────────────────────────────────────
