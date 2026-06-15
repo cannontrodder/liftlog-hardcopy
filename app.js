@@ -742,6 +742,53 @@
     return panel;
   }
 
+  function renderExerciseCard(exercise, idx) {
+    const card = el('div', 'exercise-card');
+    card.setAttribute('data-exercise', exercise.name);
+    const started = workoutHasStarted();
+
+    const exHeader = el('div', 'exercise-header');
+    const left = el('div', 'exercise-header-left');
+    left.innerHTML = `<div class="exercise-name">${exercise.name}</div>
+      <div class="exercise-meta">${exercise.sets} sets · ${exercise.repsPerSet} reps target</div>`;
+
+    const actions = el('div', 'exercise-header-actions');
+    const warmupBtn = el('button', 'icon-btn');
+    warmupBtn.textContent = 'WU';
+    warmupBtn.title = 'Warm-up builder';
+    warmupBtn.addEventListener('click', () => {
+      warmupExerciseName = warmupExerciseName === exercise.name ? null : exercise.name;
+      render();
+    });
+
+    const histBtn = el('button', 'icon-btn');
+    histBtn.textContent = '📋';
+    histBtn.title = 'History';
+    histBtn.addEventListener('click', () => openHistory(exercise.name));
+
+    actions.appendChild(warmupBtn);
+    actions.appendChild(histBtn);
+    exHeader.appendChild(left);
+    exHeader.appendChild(actions);
+    card.appendChild(exHeader);
+
+    if (!started && warmupExerciseName === exercise.name) {
+      const warmupPanel = renderWarmupPanel(exercise);
+      if (warmupPanel) card.appendChild(warmupPanel);
+    }
+
+    const grid = el('div', 'sets-grid');
+    buildSetRows(
+      exercise,
+      () => timerStart(activeSession.targetRestSeconds || 90),
+      () => timerStart(activeSession.targetRestSeconds || 90)
+    )
+      .forEach(row => grid.appendChild(row));
+    card.appendChild(grid);
+
+    return card;
+  }
+
   function refreshWarmupPanel(exercise) {
     const panels = Array.from(document.querySelectorAll('.warmup-panel'));
     if (panels.length === 0) return;
@@ -821,49 +868,6 @@
     });
     app.appendChild(tabsEl);
 
-    // Breadcrumb
-    const bc = el('div', 'breadcrumb');
-    bc.id = 'breadcrumb';
-    activeSession.exercises.forEach((ex, idx) => {
-      const state = exerciseState(activeSession, ex);
-      const crumb = el('div', `crumb${idx === activeExIdx ? ' active-crumb' : ''}${state === 'partial' ? ' partial' : state === 'complete' ? ' complete' : ''}`);
-      crumb.setAttribute('data-crumb', ex.name);
-      crumb.innerHTML = `<span class="crumb-icon">${crumbIcon(state)}</span><span class="crumb-label" title="${ex.name}">${ex.name}</span>`;
-      crumb.addEventListener('click', () => { activeExIdx = idx; warmupExerciseName = null; saveViewState(); render(); });
-      bc.appendChild(crumb);
-    });
-    app.appendChild(bc);
-
-    // Nav bar: ‹  1/7  ›  [⛶ Focus]
-    const nav = el('div', 'exercise-nav');
-
-    const prevBtn = el('button', 'nav-btn');
-    prevBtn.textContent = '‹';
-    prevBtn.disabled = activeExIdx === 0;
-    prevBtn.addEventListener('click', () => {
-      if (activeExIdx > 0) {
-        activeExIdx--;
-        warmupExerciseName = null;
-        saveViewState();
-        render();
-      }
-    });
-
-    const counter = el('div', 'nav-counter');
-    counter.textContent = `${activeExIdx + 1} / ${activeSession.exercises.length}`;
-
-    const nextBtn = el('button', 'nav-btn');
-    nextBtn.textContent = '›';
-    nextBtn.disabled = activeExIdx === activeSession.exercises.length - 1;
-    nextBtn.addEventListener('click', () => {
-      if (activeExIdx < activeSession.exercises.length - 1) {
-        activeExIdx++;
-        warmupExerciseName = null;
-        saveViewState();
-        render();
-      }
-    });
-
     const focusToggle = el('button', 'nav-focus-btn' + (focusMode ? ' active' : ''));
     focusToggle.innerHTML = '⛶ Focus';
     focusToggle.addEventListener('click', () => {
@@ -872,60 +876,19 @@
       renderFocus();
     });
 
-    nav.appendChild(prevBtn);
-    nav.appendChild(counter);
-    nav.appendChild(nextBtn);
-    nav.appendChild(focusToggle);
-    app.appendChild(nav);
+    const toolbar = el('div', 'detail-toolbar');
+    const label = el('div', 'nav-counter');
+    label.textContent = `${activeSession.exercises.length} exercises`;
+    toolbar.appendChild(label);
+    toolbar.appendChild(focusToggle);
+    app.appendChild(toolbar);
 
-    // Exercise card
-    const area = el('div', 'exercise-area');
-    const card = el('div', 'exercise-card');
-    card.setAttribute('data-exercise', exercise.name);
-    const started = workoutHasStarted();
-
-    const exHeader = el('div', 'exercise-header');
-    const left = el('div', 'exercise-header-left');
-    left.innerHTML = `<div class="exercise-name">${exercise.name}</div>
-      <div class="exercise-meta">${exercise.sets} sets · ${exercise.repsPerSet} reps target</div>`;
-
-    const actions = el('div', 'exercise-header-actions');
-    const warmupBtn = el('button', 'icon-btn');
-    warmupBtn.textContent = 'WU';
-    warmupBtn.title = 'Warm-up builder';
-    warmupBtn.addEventListener('click', () => {
-      warmupExerciseName = warmupExerciseName === exercise.name ? null : exercise.name;
-      render();
+    const list = el('div', 'exercise-area exercise-list');
+    activeSession.exercises.forEach((ex, idx) => {
+      const card = renderExerciseCard(ex, idx);
+      list.appendChild(card);
     });
-
-    const histBtn = el('button', 'icon-btn');
-    histBtn.textContent = '📋';
-    histBtn.title = 'History';
-    histBtn.addEventListener('click', () => openHistory(exercise.name));
-
-    actions.appendChild(warmupBtn);
-    actions.appendChild(histBtn);
-    exHeader.appendChild(left);
-    exHeader.appendChild(actions);
-    card.appendChild(exHeader);
-
-    if (!started && warmupExerciseName === exercise.name) {
-      const warmupPanel = renderWarmupPanel(exercise);
-      if (warmupPanel) card.appendChild(warmupPanel);
-    }
-
-    const grid = el('div', 'sets-grid');
-    buildSetRows(
-      exercise,
-      () => timerStart(activeSession.targetRestSeconds || 90),
-      () => timerStart(activeSession.targetRestSeconds || 90)
-    )
-      .forEach(row => grid.appendChild(row));
-    card.appendChild(grid);
-    area.appendChild(card);
-    app.appendChild(area);
-
-    setupSwipe(area);
+    app.appendChild(list);
 
     // Floating timer (bottom-right)
     const timerEl = el('div', 'rest-timer');

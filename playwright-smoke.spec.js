@@ -7,6 +7,10 @@ test.describe("LiftLog home page", () => {
     await expect(page.locator(".header-title")).toHaveText("Kyle Phase 4");
     await expect(page.locator(".header-name")).toHaveText("Push");
     await expect(page.locator(".session-tabs .session-tab")).toHaveCount(4);
+    await expect(page.locator(".detail-toolbar")).toHaveCount(1);
+    await expect(page.locator(".nav-btn")).toHaveCount(0);
+    await expect(page.locator("#breadcrumb")).toHaveCount(0);
+    expect(await page.locator(".exercise-list .exercise-card").count()).toBeGreaterThan(1);
     await expect(page.locator(".nav-focus-btn")).toBeVisible();
 
     await page.locator(".nav-focus-btn").click();
