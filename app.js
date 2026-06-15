@@ -113,6 +113,13 @@
     return Number.isInteger(num) ? String(num) : num.toFixed(1).replace(/\.0$/, '');
   }
 
+  function fmtWeightLabel(value) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return 'BW';
+    if (num === 0) return 'BW';
+    return `${fmtKg(num)}kg`;
+  }
+
   function parseKg(value) {
     if (value === '' || value == null) return null;
     const num = Number(value);
@@ -170,7 +177,7 @@
     const hasCurrent = weight != null || reps != null;
     if (!hasCurrent) {
       if (lastWeight != null || lastReps != null) {
-        node.textContent = `Last: ${fmtKg(lastWeight ?? 0)}kg × ${fmtKg(lastReps ?? 0)}`;
+        node.textContent = `Last: ${fmtWeightLabel(lastWeight ?? 0)} × ${fmtKg(lastReps ?? 0)}`;
       } else {
         node.textContent = 'No prior log';
       }
@@ -180,9 +187,13 @@
     const weightDelta = weight != null && lastWeight != null ? weight - lastWeight : null;
     const repsDelta = reps != null && lastReps != null ? reps - lastReps : null;
     const pieces = [];
-    if (weightDelta != null) pieces.push(`${fmtDelta(weightDelta, 'kg')}`);
-    if (repsDelta != null) pieces.push(`${fmtDelta(repsDelta, ' reps')}`);
-    node.textContent = pieces.length ? `Vs last ${pieces.join(' · ')}` : 'Vs last';
+    if (weightDelta != null && weightDelta !== 0) pieces.push(`${fmtDelta(weightDelta, 'kg')}`);
+    if (repsDelta != null && repsDelta !== 0) pieces.push(`${fmtDelta(repsDelta, ' reps')}`);
+    if (pieces.length === 0) {
+      node.textContent = 'Same as last';
+      return;
+    }
+    node.textContent = `Vs last ${pieces.join(' · ')}`;
   }
 
   function oldestSession(sessions) {
@@ -220,7 +231,7 @@
 
   function warmupPlanForExercise(exercise) {
     const baseWeight = workingWeightForExercise(exercise);
-    if (baseWeight == null) return null;
+    if (baseWeight == null || baseWeight <= 0) return null;
     return [
       { label: '50%', weight: roundToPlate(baseWeight * 0.5) },
       { label: '75%', weight: roundToPlate(baseWeight * 0.75) },
@@ -826,6 +837,9 @@
     targetDiv.textContent = `${exercise.sets} sets · ${exercise.repsPerSet} reps target`;
     body.appendChild(targetDiv);
 
+    const focusWarmup = renderWarmupPanel(exercise);
+    if (focusWarmup) body.appendChild(focusWarmup);
+
     const latestHistory = latestExerciseHistory(activeSession.name, exercise.name);
     const latestSets = latestHistory ? latestHistory.done : exercise.last;
     if (latestSets && latestSets.length) {
@@ -847,7 +861,7 @@
         const weightLabel = el('div', 'focus-last-metric-label');
         weightLabel.textContent = 'Weight';
         const weightValue = el('div', 'focus-last-metric-value');
-        weightValue.textContent = `${set.weight}kg`;
+        weightValue.textContent = fmtWeightLabel(set.weight);
         weightLine.appendChild(weightLabel);
         weightLine.appendChild(weightValue);
 
