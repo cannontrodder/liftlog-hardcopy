@@ -427,7 +427,7 @@
 
   // ── Set rows (shared between main and focus) ─────────────────────────────
 
-  function buildSetRows(exercise, onLastSetFilled) {
+  function buildSetRows(exercise, onLastSetFilled, onRepEntered) {
     const rows = [];
     for (let i = 0; i < exercise.sets; i++) {
       const row = el('div', 'set-row');
@@ -463,6 +463,7 @@
       const delta = el('div', 'set-delta');
 
       const onChange = () => {
+        const previousR = rInput.dataset.previousValue ?? savedR;
         const w = wInput.value.trim();
         const r = rInput.value.trim();
         saveField(activeSession.name, exercise.name, i, 'weight', w);
@@ -470,12 +471,15 @@
         wInput.classList.toggle('filled', w !== '');
         rInput.classList.toggle('filled', r !== '');
         updateSetDelta(delta, w, r, lastWeight, lastReps);
+        rInput.dataset.previousValue = r;
+        if (previousR === '' && r !== '' && typeof onRepEntered === 'function') onRepEntered();
         updateBreadcrumb(exercise.name);
         if (i === exercise.sets - 1 && r !== '') onLastSetFilled();
       };
 
       wInput.addEventListener('input', onChange);
       rInput.addEventListener('input', onChange);
+      rInput.dataset.previousValue = savedR;
       updateSetDelta(delta, savedW, savedR, lastWeight, lastReps);
 
       row.appendChild(label);
@@ -751,7 +755,11 @@
     }
 
     const grid = el('div', 'sets-grid');
-    buildSetRows(exercise, () => timerStart(activeSession.targetRestSeconds || 90))
+    buildSetRows(
+      exercise,
+      () => timerStart(activeSession.targetRestSeconds || 90),
+      () => timerStart(activeSession.targetRestSeconds || 90)
+    )
       .forEach(row => grid.appendChild(row));
     card.appendChild(grid);
     area.appendChild(card);
@@ -888,7 +896,11 @@
     }
 
     const setsWrap = el('div', 'focus-sets');
-    buildSetRows(exercise, () => timerStart(activeSession.targetRestSeconds || 90))
+    buildSetRows(
+      exercise,
+      () => timerStart(activeSession.targetRestSeconds || 90),
+      () => timerStart(activeSession.targetRestSeconds || 90)
+    )
       .forEach(row => {
         row.classList.add('focus-set-row');
         setsWrap.appendChild(row);
