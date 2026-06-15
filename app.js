@@ -257,6 +257,14 @@
     return e;
   }
 
+  function signalTimerComplete() {
+    // Best effort: iPhone Safari support is inconsistent, but this is harmless
+    // when vibration is unavailable.
+    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+      navigator.vibrate([120, 60, 120]);
+    }
+  }
+
   // ── Timer ────────────────────────────────────────────────────────────────
 
   function timerStart(seconds) {
@@ -271,6 +279,7 @@
         timer.running = false;
         clearInterval(timer.interval);
         timer.interval = null;
+        signalTimerComplete();
         updateAllTimers('done');
         setTimeout(() => { if (!timer.running) updateAllTimers('idle'); }, 2500);
         return;
