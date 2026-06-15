@@ -598,14 +598,16 @@
   }
 
   function refreshWarmupPanel(exercise) {
-    const currentPanel = document.querySelector('.warmup-panel');
-    if (!currentPanel) return;
-    const nextPanel = renderWarmupPanel(exercise);
-    if (!nextPanel) {
-      currentPanel.remove();
-      return;
-    }
-    currentPanel.replaceWith(nextPanel);
+    const panels = Array.from(document.querySelectorAll('.warmup-panel'));
+    if (panels.length === 0) return;
+    panels.forEach(panel => {
+      const nextPanel = renderWarmupPanel(exercise);
+      if (!nextPanel) {
+        panel.remove();
+        return;
+      }
+      panel.replaceWith(nextPanel);
+    });
   }
 
   // ── Main render ──────────────────────────────────────────────────────────
