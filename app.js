@@ -469,13 +469,15 @@
     focusCounter.style.textAlign = 'center';
     focusCounter.textContent = `${activeExIdx + 1} / ${activeSession.exercises.length}`;
 
-    // Timer widget stays in focus mode but is moved into the content body
+    // Full-width timer action stays above the focus header while the workout scrolls.
     const timerWrap = el('div', 'focus-timer-inline');
     const state = timerStateClass();
     if (state !== 'idle') timerWrap.classList.add(state);
 
-    const timerText = el('span', 'focus-timer-text');
+    const timerText = el('button', 'focus-timer-text');
+    timerText.type = 'button';
     timerText.textContent = timerDisplayText(state);
+    timerText.title = 'Start or stop rest timer';
     timerText.addEventListener('click', () => {
       if (timer.running) timerStop();
       else timerStart(activeSession.targetRestSeconds || 90);
@@ -492,6 +494,7 @@
     timerWrap.appendChild(timerText);
     timerWrap.appendChild(timerEditBtn);
 
+    overlay.appendChild(timerWrap);
     topBar.appendChild(backBtn);
     topBar.appendChild(focusCounter);
     overlay.appendChild(topBar);
@@ -553,13 +556,6 @@
       lastBox.appendChild(lastList);
       body.appendChild(lastBox);
     }
-
-    const restRow = el('div', 'focus-rest');
-    const restLabel = el('div', 'focus-rest-label');
-    restLabel.textContent = 'Rest timer';
-    restRow.appendChild(restLabel);
-    restRow.appendChild(timerWrap);
-    body.appendChild(restRow);
 
     const setsWrap = el('div', 'focus-sets');
     buildSetRows(exercise, () => timerStart(activeSession.targetRestSeconds || 90))

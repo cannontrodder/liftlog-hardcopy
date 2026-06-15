@@ -12,8 +12,13 @@ test.describe("LiftLog home page", () => {
     await page.locator(".nav-focus-btn").click();
 
     await expect(page.locator("#focus-overlay")).toBeVisible();
+    await expect(page.locator("#focus-overlay > .focus-timer-inline")).toBeVisible();
+    await expect(page.locator(".focus-timer-text")).toHaveText("Rest");
     await expect(page.locator(".focus-back")).toHaveText("← Detail mode");
     await expect(page.locator(".focus-footer button")).toHaveCount(2);
+
+    await page.locator(".focus-timer-text").click();
+    await expect(page.locator(".focus-timer-text")).not.toHaveText("Rest");
   });
 });
 

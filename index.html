@@ -355,29 +355,47 @@
       justify-self: start;
     }
     .focus-timer-inline {
-      display: flex;
+      background: var(--accent);
+      color: #000;
+      display: grid;
+      grid-template-columns: 1fr;
       align-items: center;
-      gap: 6px;
-      align-self: start;
+      flex-shrink: 0;
+      min-height: 58px;
+      position: relative;
+      width: 100%;
+      z-index: 2;
     }
     .focus-timer-text {
-      font-size: 22px;
-      font-weight: 700;
-      font-variant-numeric: tabular-nums;
-      color: var(--timer-active);
-      min-width: 60px;
-      text-align: right;
+      appearance: none;
+      background: transparent;
+      border: 0;
+      color: #000;
       cursor: pointer;
+      font-size: 20px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      height: 100%;
+      letter-spacing: 0.02em;
+      min-height: 58px;
+      padding: 14px 60px;
+      text-align: center;
+      width: 100%;
     }
-    .focus-timer-inline.idle .focus-timer-text { color: var(--text-muted); font-size: 15px; }
-    .focus-timer-inline.warning .focus-timer-text { color: var(--timer-warning); }
-    .focus-timer-inline.done .focus-timer-text { color: var(--timer-done); }
-    .focus-timer-inline .timer-pill {
-      padding: 10px 16px;
-      min-width: 86px;
+    .focus-timer-inline.warning { background: var(--timer-warning); }
+    .focus-timer-inline.done { background: var(--timer-done); }
+    .focus-timer-inline .timer-edit-btn {
+      background: rgba(0, 0, 0, 0.16);
+      border: 1px solid rgba(0, 0, 0, 0.25);
+      color: #000;
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
     }
-    .focus-timer-inline .timer-text {
-      font-size: 18px;
+    .focus-timer-inline .timer-edit-btn:hover {
+      border-color: #000;
+      color: #000;
     }
     .timer-edit-btn {
       background: var(--surface2);
@@ -473,22 +491,6 @@
       font-size: 14px;
       font-weight: 700;
       text-align: right;
-    }
-    .focus-rest {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 12px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .focus-rest-label {
-      font-size: 11px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      font-weight: 700;
     }
     .focus-sets { display: flex; flex-direction: column; gap: 10px; }
     .focus-set-row {
@@ -600,6 +602,7 @@
     .focus-timer-inline .timer-popover {
       bottom: auto;
       top: calc(100% + 8px);
+      right: 12px;
     }
     .timer-popover-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
     .timer-presets { display: flex; gap: 6px; flex-wrap: wrap; }
