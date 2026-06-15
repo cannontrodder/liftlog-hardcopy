@@ -857,53 +857,6 @@
     const focusWarmup = renderWarmupPanel(exercise);
     if (focusWarmup) body.appendChild(focusWarmup);
 
-    const latestHistory = latestExerciseHistory(activeSession.name, exercise.name);
-    const latestSets = latestHistory ? latestHistory.done : exercise.last;
-    if (latestSets && latestSets.length) {
-      const lastBox = el('div', 'focus-last');
-      const lastLabel = el('div', 'focus-last-label');
-      lastLabel.textContent = latestHistory ? `Last time · ${fmtDate(latestHistory.date)}` : `Last time · ${fmtDate(activeSession.lastDate)}`;
-      const lastList = el('div', 'focus-last-list');
-      const sessionBox = el('div', 'focus-last-session');
-      const sessionMeta = el('div', 'focus-last-session-meta');
-      sessionMeta.textContent = latestHistory ? fmtDate(latestHistory.date) : fmtDate(activeSession.lastDate);
-      const sessionSets = el('div', 'focus-last-session-sets');
-
-      latestSets.forEach((set, idx) => {
-        const setCard = el('div', 'focus-last-set');
-        const setLabel = el('div', 'focus-last-set-label');
-        setLabel.textContent = `Set ${idx + 1}`;
-
-        const weightLine = el('div', 'focus-last-set-line');
-        const weightLabel = el('div', 'focus-last-metric-label');
-        weightLabel.textContent = 'Weight';
-        const weightValue = el('div', 'focus-last-metric-value');
-        weightValue.textContent = fmtWeightLabel(set.weight);
-        weightLine.appendChild(weightLabel);
-        weightLine.appendChild(weightValue);
-
-        const repsLine = el('div', 'focus-last-set-line');
-        const repsLabel = el('div', 'focus-last-metric-label');
-        repsLabel.textContent = 'Reps';
-        const repsValue = el('div', 'focus-last-metric-value');
-        repsValue.textContent = String(set.reps);
-        repsLine.appendChild(repsLabel);
-        repsLine.appendChild(repsValue);
-
-        setCard.appendChild(setLabel);
-        setCard.appendChild(weightLine);
-        setCard.appendChild(repsLine);
-        sessionSets.appendChild(setCard);
-      });
-
-      sessionBox.appendChild(sessionMeta);
-      sessionBox.appendChild(sessionSets);
-      lastList.appendChild(sessionBox);
-      lastBox.appendChild(lastLabel);
-      lastBox.appendChild(lastList);
-      body.appendChild(lastBox);
-    }
-
     const setsWrap = el('div', 'focus-sets');
     buildSetRows(
       exercise,
