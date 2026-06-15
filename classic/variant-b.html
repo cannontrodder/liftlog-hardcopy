@@ -457,7 +457,6 @@
             if (!timerRemaining) {
               clearInterval(timerHandle);
               timerHandle = null;
-              if (navigator.vibrate) navigator.vibrate([180, 100, 180]);
             }
             updateTimer();
           }, 1000);

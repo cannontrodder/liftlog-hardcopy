@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="liftlog-deploy-version" content="20260615000000000000000">
   <title>LiftLog</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -536,14 +537,13 @@
       grid-template-columns: 1fr;
       align-items: center;
       flex-shrink: 0;
-      min-height: 58px;
+      min-height: var(--focus-height, 64px);
+      height: var(--focus-height, 64px);
       position: relative;
       width: 100%;
       z-index: 2;
-      transform: scale(var(--focus-scale, 1));
-      transform-origin: center top;
-      transition: transform 0.95s linear, background 0.2s, color 0.2s;
-      will-change: transform;
+      transition: height 0.95s linear, min-height 0.95s linear, background 0.2s, color 0.2s;
+      will-change: height;
     }
     .focus-timer-text {
       appearance: none;
@@ -551,12 +551,12 @@
       border: 0;
       color: #000;
       cursor: pointer;
-      font-size: 20px;
+      font-size: 21px;
       font-weight: 800;
       font-variant-numeric: tabular-nums;
       height: 100%;
       letter-spacing: 0.02em;
-      min-height: 58px;
+      min-height: var(--focus-height, 64px);
       padding: 14px 60px;
       text-align: center;
       width: 100%;
@@ -734,6 +734,65 @@
       top: calc(100% + 8px);
       right: 12px;
     }
+    .update-prompt-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      background: rgba(0, 0, 0, 0.66);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .update-prompt-card {
+      width: min(100%, 360px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.38);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .update-prompt-title {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+    }
+    .update-prompt-body {
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .update-prompt-meta {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+    .update-prompt-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .update-prompt-btn {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 9px 12px;
+      cursor: pointer;
+    }
+    .update-prompt-btn.secondary {
+      background: var(--surface2);
+      color: var(--text);
+    }
+    .update-prompt-btn.primary {
+      background: var(--accent);
+      color: #000;
+      border-color: transparent;
+    }
+    .update-prompt-btn:hover { filter: brightness(1.06); }
     .timer-popover-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
     .timer-presets { display: flex; gap: 6px; flex-wrap: wrap; }
     .timer-preset-btn {
@@ -763,9 +822,13 @@
     <div class="loading">Loading…</div>
   </div>
   <script>
-    // Cache-bust the workout bundle so new deploys show up on the next visit.
+    const versionMeta = document.querySelector('meta[name="liftlog-deploy-version"]');
+    const deployVersion = versionMeta ? versionMeta.content : '';
+    window.__LIFTLOG_DEPLOY_VERSION__ = deployVersion;
+
+    // Cache-bust the workout bundle using the deploy version so new deploys show up on the next visit.
     const script = document.createElement('script');
-    script.src = `app.js?v=${Date.now()}`;
+    script.src = `app.js?v=${encodeURIComponent(deployVersion || String(Date.now()))}`;
     document.body.appendChild(script);
   </script>
 </body>

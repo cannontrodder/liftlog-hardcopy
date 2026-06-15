@@ -26,6 +26,18 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      - name: Stamp deploy version
+        run: |
+          VERSION="$(date -u +%Y%m%d%H%M%S%N)"
+          DEPLOYED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          cat > deploy-version.json <<EOF
+          {
+            "version": "${VERSION}",
+            "deployedAt": "${DEPLOYED_AT}"
+          }
+          EOF
+          perl -0pi -e "s/__LIFTLOG_DEPLOY_VERSION__/${VERSION}/g" index.html
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:

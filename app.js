@@ -9,9 +9,15 @@
   let focusMode = false;
   let activePhaseName = null;
   let warmupExerciseName = null;
+  let dismissedUpdateVersion = sessionStorage.getItem('liftlog:update-prompted-version') || null;
+  let updateCheckInFlight = false;
 
   const STATE_KEY = 'liftlog-hardcopy:ui:v1';
   const FIELD_KEY_PREFIX = 'liftlog-hardcopy:field:v2';
+  const DEPLOY_VERSION_META = 'liftlog-deploy-version';
+  const DEPLOY_VERSION_RE = /^\d{20,}$/;
+  const LATEST_DEPLOY_FILE = 'deploy-version.json';
+  const UPDATE_PROMPT_STATE_KEY = 'liftlog:update-prompted-version';
 
   const timer = {
     duration: 90,
@@ -242,17 +248,118 @@
     return null;
   }
 
+  function workoutHasStarted() {
+    if (!activeSession) return false;
+    return activeSession.exercises.some(exercise => loadField(activeSession.name, exercise.name, 0, 'reps') !== '');
+  }
+
   function el(tag, className) {
     const e = document.createElement(tag);
     if (className) e.className = className;
     return e;
   }
 
-  function signalTimerComplete() {
-    // Best effort: iPhone Safari support is inconsistent, but this is harmless
-    // when vibration is unavailable.
-    if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
-      navigator.vibrate([240, 80, 240, 80, 420]);
+  function currentDeployVersion() {
+    const meta = document.querySelector(`meta[name="${DEPLOY_VERSION_META}"]`);
+    const raw = meta?.content || window.__LIFTLOG_DEPLOY_VERSION__ || '';
+    return DEPLOY_VERSION_RE.test(raw) ? raw : null;
+  }
+
+  function liveDeployVersionUrl() {
+    const current = currentDeployVersion();
+    const cacheBust = current || String(Date.now());
+    return `${LATEST_DEPLOY_FILE}?v=${encodeURIComponent(cacheBust)}`;
+  }
+
+  function compareDeployVersions(left, right) {
+    try {
+      const a = BigInt(left);
+      const b = BigInt(right);
+      if (a === b) return 0;
+      return a > b ? 1 : -1;
+    } catch {
+      return left.localeCompare(right);
+    }
+  }
+
+  function removeUpdatePrompt() {
+    document.getElementById('update-prompt-backdrop')?.remove();
+  }
+
+  function showUpdatePrompt(version) {
+    if (!version || dismissedUpdateVersion === version) return;
+    if (document.getElementById('update-prompt-backdrop')) return;
+
+    const backdrop = el('div', 'update-prompt-backdrop');
+    backdrop.id = 'update-prompt-backdrop';
+    backdrop.setAttribute('role', 'presentation');
+
+    const card = el('div', 'update-prompt-card');
+    card.setAttribute('role', 'dialog');
+    card.setAttribute('aria-modal', 'true');
+    card.setAttribute('aria-labelledby', 'update-prompt-title');
+    card.setAttribute('aria-describedby', 'update-prompt-body');
+
+    const title = el('div', 'update-prompt-title');
+    title.id = 'update-prompt-title';
+    title.textContent = 'New version available';
+
+    const body = el('div', 'update-prompt-body');
+    body.id = 'update-prompt-body';
+    body.textContent = 'A newer LiftLog deploy is live. Refresh now to load it?';
+
+    const meta = el('div', 'update-prompt-meta');
+    meta.textContent = `Current: ${currentDeployVersion() || 'local'} · Latest: ${version}`;
+
+    const actions = el('div', 'update-prompt-actions');
+    const laterBtn = el('button', 'update-prompt-btn secondary');
+    laterBtn.textContent = 'Later';
+    laterBtn.addEventListener('click', () => {
+      dismissedUpdateVersion = version;
+      sessionStorage.setItem(UPDATE_PROMPT_STATE_KEY, version);
+      removeUpdatePrompt();
+    });
+
+    const refreshBtn = el('button', 'update-prompt-btn primary');
+    refreshBtn.textContent = 'Refresh now';
+    refreshBtn.addEventListener('click', () => {
+      sessionStorage.removeItem(UPDATE_PROMPT_STATE_KEY);
+      removeUpdatePrompt();
+      window.location.reload();
+    });
+
+    actions.appendChild(laterBtn);
+    actions.appendChild(refreshBtn);
+    card.appendChild(title);
+    card.appendChild(body);
+    card.appendChild(meta);
+    card.appendChild(actions);
+    backdrop.appendChild(card);
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) laterBtn.click();
+    });
+    document.body.appendChild(backdrop);
+  }
+
+  async function checkForDeployUpdate() {
+    const current = currentDeployVersion();
+    if (!current || updateCheckInFlight) return;
+
+    updateCheckInFlight = true;
+    try {
+      const response = await fetch(liveDeployVersionUrl(), { cache: 'no-store' });
+      if (!response.ok) return;
+      const payload = await response.json();
+      const live = typeof payload === 'string' ? payload : payload?.version;
+      if (!live || !DEPLOY_VERSION_RE.test(live)) return;
+      if (dismissedUpdateVersion === live) return;
+      if (compareDeployVersions(live, current) > 0) {
+        showUpdatePrompt(live);
+      }
+    } catch {
+      // Ignore version-check failures; the page should still work normally.
+    } finally {
+      updateCheckInFlight = false;
     }
   }
 
@@ -297,7 +404,6 @@
         timer.running = false;
         clearInterval(timer.interval);
         timer.interval = null;
-        signalTimerComplete();
         setFocusBlink(true);
         updateAllTimers('done');
         setTimeout(() => { if (!timer.running) updateAllTimers('idle'); }, 2500);
@@ -348,7 +454,7 @@
     if (inlineWrap && inlineText) {
       inlineWrap.className = `focus-timer-inline ${state !== 'idle' ? state : ''}`.trim();
       inlineText.textContent = timerDisplayText(state);
-      inlineWrap.style.setProperty('--focus-scale', String(focusTimerScale()));
+      inlineWrap.style.setProperty('--focus-height', `${Math.round(64 * focusTimerScale())}px`);
       inlineWrap.dataset.timerState = state;
     }
     if (state === 'idle') {
@@ -499,6 +605,7 @@
         const previousR = rInput.dataset.previousValue ?? savedR;
         const w = wInput.value.trim();
         const r = rInput.value.trim();
+        const firstSetJustStarted = i === 0 && previousR === '' && r !== '';
         saveField(activeSession.name, exercise.name, i, 'weight', w);
         saveField(activeSession.name, exercise.name, i, 'reps', r);
         wInput.classList.toggle('filled', w !== '');
@@ -506,7 +613,12 @@
         updateSetDelta(delta, w, r, lastWeight, lastReps);
         rInput.dataset.previousValue = r;
         if (previousR === '' && r !== '' && typeof onRepEntered === 'function') onRepEntered();
-        if (i === 0) refreshWarmupPanel(exercise);
+        if (firstSetJustStarted) {
+          warmupExerciseName = null;
+          document.querySelectorAll('.warmup-panel').forEach(panel => panel.remove());
+        } else if (i === 0) {
+          refreshWarmupPanel(exercise);
+        }
         updateBreadcrumb(exercise.name);
         if (i === exercise.sets - 1 && r !== '') onLastSetFilled();
       };
@@ -770,6 +882,7 @@
     const area = el('div', 'exercise-area');
     const card = el('div', 'exercise-card');
     card.setAttribute('data-exercise', exercise.name);
+    const started = workoutHasStarted();
 
     const exHeader = el('div', 'exercise-header');
     const left = el('div', 'exercise-header-left');
@@ -796,7 +909,7 @@
     exHeader.appendChild(actions);
     card.appendChild(exHeader);
 
-    if (warmupExerciseName === exercise.name) {
+    if (!started && warmupExerciseName === exercise.name) {
       const warmupPanel = renderWarmupPanel(exercise);
       if (warmupPanel) card.appendChild(warmupPanel);
     }
@@ -883,6 +996,7 @@
 
     // Body
     const body = el('div', 'focus-body');
+    const started = workoutHasStarted();
 
     const nameDiv = el('div', 'focus-name');
     nameDiv.textContent = exercise.name;
@@ -892,7 +1006,7 @@
     targetDiv.textContent = `${exercise.sets} sets · ${exercise.repsPerSet} reps target`;
     body.appendChild(targetDiv);
 
-    const focusWarmup = renderWarmupPanel(exercise);
+    const focusWarmup = !started ? renderWarmupPanel(exercise) : null;
     if (focusWarmup) body.appendChild(focusWarmup);
 
     const setsWrap = el('div', 'focus-sets');
@@ -1035,6 +1149,11 @@
       focusMode = savedState?.focusMode === true;
       render();
       if (focusMode) renderFocus();
+      void checkForDeployUpdate();
+      setInterval(() => { void checkForDeployUpdate(); }, 5 * 60 * 1000);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) void checkForDeployUpdate();
+      });
     } catch (err) {
       app.innerHTML = `<div class="error">Failed to load: ${err.message}</div>`;
     }

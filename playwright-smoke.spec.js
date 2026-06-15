@@ -20,6 +20,61 @@ test.describe("LiftLog home page", () => {
     await page.locator(".focus-timer-text").click();
     await expect(page.locator(".focus-timer-text")).not.toHaveText("Rest");
   });
+
+  test("prompts to refresh when a newer deploy version is live", async ({ page }) => {
+    const currentVersion = "20260615000000000000000";
+    const nextVersion = "20260615000000000000001";
+    let calls = 0;
+
+    await page.route("**/deploy-version.json*", async route => {
+      calls += 1;
+      await route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ version: calls === 1 ? nextVersion : currentVersion }),
+      });
+    });
+
+    await page.goto("/index.html");
+
+    const prompt = page.locator(".update-prompt-card");
+    await expect(prompt).toBeVisible();
+    await expect(prompt).toContainText("New version available");
+
+    await prompt.getByRole("button", { name: "Refresh now" }).click();
+    await expect(page.locator(".header-title")).toHaveText("Kyle Phase 4");
+    await expect(page.locator(".update-prompt-card")).toHaveCount(0);
+  });
+
+  test("hides the warm-up panel when the first set starts", async ({ page }) => {
+    await page.goto("/index.html");
+
+    const firstCard = page.locator(".exercise-card").first();
+    await firstCard.locator(".icon-btn").first().click();
+    await expect(page.locator(".warmup-panel")).toBeVisible();
+
+    const firstRepsInput = firstCard.locator('[data-field="reps"]').first();
+    await firstRepsInput.fill("8");
+    await firstRepsInput.dispatchEvent("input");
+
+    await expect(page.locator(".warmup-panel")).toHaveCount(0);
+  });
+
+  test("pushes the workout down as the focus timer grows", async ({ page }) => {
+    await page.goto("/index.html");
+
+    await page.locator(".nav-focus-btn").click();
+
+    const body = page.locator(".focus-body");
+    const timerText = page.locator(".focus-timer-text");
+    const before = await body.boundingBox();
+    await timerText.click();
+    await page.waitForTimeout(4200);
+    const after = await body.boundingBox();
+
+    expect(before).not.toBeNull();
+    expect(after).not.toBeNull();
+    expect(after.y).toBeGreaterThan(before.y);
+  });
 });
 
 test.describe("Analysis set", () => {
