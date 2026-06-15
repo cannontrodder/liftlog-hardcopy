@@ -8,6 +8,10 @@
   let activeExIdx = 0;
   let focusMode = false;
   let activePhaseName = null;
+  let warmupExerciseName = null;
+
+  const STATE_KEY = 'liftlog-hardcopy:ui:v1';
+  const FIELD_KEY_PREFIX = 'liftlog-hardcopy:field:v2';
 
   const timer = {
     duration: 90,
@@ -18,18 +22,82 @@
 
   // ── Storage ──────────────────────────────────────────────────────────────
 
-  function storageKey(sessionName, exerciseName, setIndex, field) {
+  function stateKey() {
+    return STATE_KEY;
+  }
+
+  function fieldStorageKey(phaseName, sessionName, exerciseName, setIndex, field) {
+    return `${FIELD_KEY_PREFIX}:${phaseName}:${sessionName}:${exerciseName}:set${setIndex}:${field}`;
+  }
+
+  function legacyFieldStorageKey(sessionName, exerciseName, setIndex, field) {
     return `liftlog-${data.backupDate}-${sessionName}-${exerciseName}-set${setIndex}-${field}`;
   }
 
+  function readUiState() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(stateKey()));
+      if (parsed && typeof parsed === 'object') return parsed;
+    } catch {}
+    return null;
+  }
+
+  function writeUiState(next) {
+    localStorage.setItem(stateKey(), JSON.stringify(next));
+  }
+
+  function saveViewState() {
+    if (!activeSession || !activeSession.exercises.length) return;
+    writeUiState({
+      phaseName: activePhaseName,
+      sessionName: activeSession.name,
+      exerciseName: activeSession.exercises[activeExIdx]?.name || null,
+      exerciseIndex: activeExIdx,
+      focusMode,
+    });
+  }
+
+  function loadStoredField(sessionName, exerciseName, setIndex, field) {
+    const phaseName = activePhaseName || data?.name;
+    if (phaseName) {
+      const current = localStorage.getItem(fieldStorageKey(phaseName, sessionName, exerciseName, setIndex, field));
+      if (current != null) return current;
+    }
+    return localStorage.getItem(legacyFieldStorageKey(sessionName, exerciseName, setIndex, field));
+  }
+
+  function migrateLegacyFields(phaseName, sessions) {
+    if (!phaseName || !sessions) return;
+    sessions.forEach(session => {
+      session.exercises.forEach(exercise => {
+        for (let i = 0; i < exercise.sets; i++) {
+          ['weight', 'reps'].forEach(field => {
+            const stableKey = fieldStorageKey(phaseName, session.name, exercise.name, i, field);
+            if (localStorage.getItem(stableKey) != null) return;
+
+            const suffix = `-${session.name}-${exercise.name}-set${i}-${field}`;
+            for (let idx = 0; idx < localStorage.length; idx++) {
+              const key = localStorage.key(idx);
+              if (key && key.startsWith('liftlog-') && key.endsWith(suffix)) {
+                const value = localStorage.getItem(key);
+                if (value != null) localStorage.setItem(stableKey, value);
+                return;
+              }
+            }
+          });
+        }
+      });
+    });
+  }
+
   function saveField(sessionName, exerciseName, setIndex, field, value) {
-    const key = storageKey(sessionName, exerciseName, setIndex, field);
+    const key = fieldStorageKey(activePhaseName || data.name, sessionName, exerciseName, setIndex, field);
     if (value === '' || value == null) localStorage.removeItem(key);
     else localStorage.setItem(key, String(value));
   }
 
   function loadField(sessionName, exerciseName, setIndex, field) {
-    return localStorage.getItem(storageKey(sessionName, exerciseName, setIndex, field)) ?? '';
+    return loadStoredField(sessionName, exerciseName, setIndex, field) ?? '';
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────
@@ -37,6 +105,48 @@
   function fmtDate(iso) {
     if (!iso) return '—';
     return new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
+  }
+
+  function fmtKg(value) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return '0';
+    return Number.isInteger(num) ? String(num) : num.toFixed(1).replace(/\.0$/, '');
+  }
+
+  function parseKg(value) {
+    if (value === '' || value == null) return null;
+    const num = Number(value);
+    return Number.isFinite(num) ? num : null;
+  }
+
+  function roundToPlate(value) {
+    return Math.max(0, Math.round(value / 2.5) * 2.5);
+  }
+
+  function fmtDelta(value, suffix = '') {
+    const num = Number(value);
+    if (!Number.isFinite(num) || num === 0) return `0${suffix}`;
+    return `${num > 0 ? '+' : ''}${fmtKg(num)}${suffix}`;
+  }
+
+  function sessionByName(name) {
+    return data.sessions.find(session => session.name === name) || null;
+  }
+
+  function exerciseIndexByName(session, exerciseName) {
+    if (!session) return 0;
+    const idx = session.exercises.findIndex(ex => ex.name === exerciseName);
+    return idx >= 0 ? idx : 0;
+  }
+
+  function totalLoggedSets(session) {
+    return session.exercises.reduce((sum, exercise) => {
+      let filled = 0;
+      for (let i = 0; i < exercise.sets; i++) {
+        if (loadField(session.name, exercise.name, i, 'reps') !== '') filled++;
+      }
+      return sum + filled;
+    }, 0);
   }
 
   function exerciseState(session, exercise) {
@@ -53,12 +163,68 @@
     return state === 'complete' ? '✓' : state === 'partial' ? '◐' : '●';
   }
 
+  function updateSetDelta(node, currentWeight, currentReps, lastWeight, lastReps) {
+    if (!node) return;
+    const weight = parseKg(currentWeight);
+    const reps = parseKg(currentReps);
+    const hasCurrent = weight != null || reps != null;
+    if (!hasCurrent) {
+      if (lastWeight != null || lastReps != null) {
+        node.textContent = `Last: ${fmtKg(lastWeight ?? 0)}kg × ${fmtKg(lastReps ?? 0)}`;
+      } else {
+        node.textContent = 'No prior log';
+      }
+      return;
+    }
+
+    const weightDelta = weight != null && lastWeight != null ? weight - lastWeight : null;
+    const repsDelta = reps != null && lastReps != null ? reps - lastReps : null;
+    const pieces = [];
+    if (weightDelta != null) pieces.push(`${fmtDelta(weightDelta, 'kg')}`);
+    if (repsDelta != null) pieces.push(`${fmtDelta(repsDelta, ' reps')}`);
+    node.textContent = pieces.length ? `Vs last ${pieces.join(' · ')}` : 'Vs last';
+  }
+
   function oldestSession(sessions) {
     return sessions.reduce((oldest, s) => {
       if (!oldest.lastDate) return s;
       if (!s.lastDate) return oldest;
       return s.lastDate < oldest.lastDate ? s : oldest;
     });
+  }
+
+  function nextSessionAfter(currentSession) {
+    const remaining = data.sessions.filter(session => session.name !== currentSession.name);
+    if (remaining.length === 0) return currentSession;
+    return oldestSession(remaining);
+  }
+
+  function workingWeightForExercise(exercise) {
+    const savedWeights = [];
+    for (let i = 0; i < exercise.sets; i++) {
+      const saved = loadField(activeSession.name, exercise.name, i, 'weight');
+      const parsed = parseKg(saved);
+      if (parsed != null) savedWeights.push(parsed);
+    }
+    if (savedWeights.length > 0) {
+      return Math.max(...savedWeights);
+    }
+    const lastWeights = (exercise.last || [])
+      .map(set => parseKg(set.weight))
+      .filter(weight => weight != null);
+    if (lastWeights.length > 0) {
+      return Math.max(...lastWeights);
+    }
+    return null;
+  }
+
+  function warmupPlanForExercise(exercise) {
+    const baseWeight = workingWeightForExercise(exercise);
+    if (baseWeight == null) return null;
+    return [
+      { label: '50%', weight: roundToPlate(baseWeight * 0.5) },
+      { label: '75%', weight: roundToPlate(baseWeight * 0.75) },
+    ];
   }
 
   function latestExerciseHistory(sessionName, exerciseName) {
@@ -254,11 +420,13 @@
     const rows = [];
     for (let i = 0; i < exercise.sets; i++) {
       const row = el('div', 'set-row');
+      const lastSet = exercise.last && exercise.last[i];
+      const lastWeight = parseKg(lastSet && lastSet.weight);
+      const lastReps = parseKg(lastSet && lastSet.reps);
 
       const label = el('div', 'set-label');
       label.textContent = `Set ${i + 1}`;
 
-      const lastSet = exercise.last && exercise.last[i];
       const savedW = loadField(activeSession.name, exercise.name, i, 'weight');
       const savedR = loadField(activeSession.name, exercise.name, i, 'reps');
 
@@ -281,6 +449,8 @@
       rInput.setAttribute('data-field', 'reps');
       rInput.setAttribute('aria-label', `${exercise.name} set ${i + 1} reps`);
 
+      const delta = el('div', 'set-delta');
+
       const onChange = () => {
         const w = wInput.value.trim();
         const r = rInput.value.trim();
@@ -288,20 +458,127 @@
         saveField(activeSession.name, exercise.name, i, 'reps', r);
         wInput.classList.toggle('filled', w !== '');
         rInput.classList.toggle('filled', r !== '');
+        updateSetDelta(delta, w, r, lastWeight, lastReps);
         updateBreadcrumb(exercise.name);
         if (i === exercise.sets - 1 && r !== '') onLastSetFilled();
       };
 
       wInput.addEventListener('input', onChange);
       rInput.addEventListener('input', onChange);
+      updateSetDelta(delta, savedW, savedR, lastWeight, lastReps);
 
       row.appendChild(label);
       row.appendChild(wInput);
       row.appendChild(mid);
       row.appendChild(rInput);
+      row.appendChild(delta);
       rows.push(row);
     }
     return rows;
+  }
+
+  function closeSummary() {
+    document.getElementById('session-summary-overlay')?.remove();
+  }
+
+  function openSessionSummary() {
+    closeSummary();
+
+    const overlay = el('div', 'summary-backdrop');
+    overlay.id = 'session-summary-overlay';
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeSummary();
+    });
+
+    const card = el('div', 'summary-card');
+    const header = el('div', 'summary-header');
+    const titleWrap = el('div', 'summary-title-wrap');
+    const eyebrow = el('div', 'summary-eyebrow');
+    eyebrow.textContent = 'Workout complete';
+    const title = el('div', 'summary-title');
+    title.textContent = activeSession.name;
+    titleWrap.appendChild(eyebrow);
+    titleWrap.appendChild(title);
+
+    const closeBtn = el('button', 'summary-close');
+    closeBtn.textContent = '✕';
+    closeBtn.addEventListener('click', closeSummary);
+    header.appendChild(titleWrap);
+    header.appendChild(closeBtn);
+    card.appendChild(header);
+
+    const completedExercises = activeSession.exercises.filter(ex => exerciseState(activeSession, ex) === 'complete').length;
+    const totalExercises = activeSession.exercises.length;
+    const loggedSets = totalLoggedSets(activeSession);
+    const totalSets = activeSession.exercises.reduce((sum, ex) => sum + ex.sets, 0);
+    const nextSession = nextSessionAfter(activeSession);
+
+    const stats = el('div', 'summary-stats');
+    [
+      [`Exercises`, `${completedExercises} / ${totalExercises}`],
+      [`Sets logged`, `${loggedSets} / ${totalSets}`],
+      [`Next session`, nextSession ? nextSession.name : 'None'],
+    ].forEach(([label, value]) => {
+      const row = el('div', 'summary-stat');
+      const statLabel = el('div', 'summary-stat-label');
+      statLabel.textContent = label;
+      const statValue = el('div', 'summary-stat-value');
+      statValue.textContent = value;
+      row.appendChild(statLabel);
+      row.appendChild(statValue);
+      stats.appendChild(row);
+    });
+    card.appendChild(stats);
+
+    if (nextSession) {
+      const note = el('div', 'summary-note');
+      note.textContent = nextSession === activeSession
+        ? 'This routine is still the oldest session in the rotation.'
+        : `Up next: ${nextSession.name}.`;
+      card.appendChild(note);
+    }
+
+    const actions = el('div', 'summary-actions');
+    const backBtn = el('button', 'summary-action summary-action-primary');
+    backBtn.textContent = 'Resume workout';
+    backBtn.addEventListener('click', closeSummary);
+    actions.appendChild(backBtn);
+    card.appendChild(actions);
+
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+  }
+
+  function renderWarmupPanel(exercise) {
+    const plan = warmupPlanForExercise(exercise);
+    if (!plan) return null;
+
+    const panel = el('div', 'warmup-panel');
+    const head = el('div', 'warmup-head');
+    const label = el('div', 'warmup-label');
+    label.textContent = 'Warm-up';
+    const hint = el('div', 'warmup-hint');
+    hint.textContent = `From ${fmtKg(workingWeightForExercise(exercise))}kg`;
+    head.appendChild(label);
+    head.appendChild(hint);
+    panel.appendChild(head);
+
+    const rows = el('div', 'warmup-rows');
+    plan.forEach((step, index) => {
+      const item = el('div', 'warmup-step');
+      const stepLabel = el('div', 'warmup-step-label');
+      stepLabel.textContent = `Set ${index + 1}`;
+      const stepPct = el('div', 'warmup-step-pct');
+      stepPct.textContent = `${step.label}`;
+      const stepWeight = el('div', 'warmup-step-weight');
+      stepWeight.textContent = `${fmtKg(step.weight)}kg`;
+      item.appendChild(stepLabel);
+      item.appendChild(stepPct);
+      item.appendChild(stepWeight);
+      rows.appendChild(item);
+    });
+    panel.appendChild(rows);
+    return panel;
   }
 
   // ── Main render ──────────────────────────────────────────────────────────
@@ -313,6 +590,9 @@
     // Remove any stale floating timer
     document.querySelectorAll('.rest-timer').forEach(t => t.remove());
 
+    if (!activeSession) activeSession = oldestSession(data.sessions);
+    if (!activeSession) return;
+    if (activeExIdx >= activeSession.exercises.length) activeExIdx = 0;
     const exercise = activeSession.exercises[activeExIdx];
     const nextSession = oldestSession(data.sessions);
 
@@ -359,6 +639,8 @@
       tab.addEventListener('click', () => {
         activeSession = data.sessions.find(s => s.name === session.name);
         activeExIdx = 0;
+        warmupExerciseName = null;
+        saveViewState();
         render();
       });
       tabsEl.appendChild(tab);
@@ -373,7 +655,7 @@
       const crumb = el('div', `crumb${idx === activeExIdx ? ' active-crumb' : ''}${state === 'partial' ? ' partial' : state === 'complete' ? ' complete' : ''}`);
       crumb.setAttribute('data-crumb', ex.name);
       crumb.innerHTML = `<span class="crumb-icon">${crumbIcon(state)}</span><span class="crumb-label" title="${ex.name}">${ex.name}</span>`;
-      crumb.addEventListener('click', () => { activeExIdx = idx; render(); });
+      crumb.addEventListener('click', () => { activeExIdx = idx; warmupExerciseName = null; saveViewState(); render(); });
       bc.appendChild(crumb);
     });
     app.appendChild(bc);
@@ -384,7 +666,14 @@
     const prevBtn = el('button', 'nav-btn');
     prevBtn.textContent = '‹';
     prevBtn.disabled = activeExIdx === 0;
-    prevBtn.addEventListener('click', () => { if (activeExIdx > 0) { activeExIdx--; render(); } });
+    prevBtn.addEventListener('click', () => {
+      if (activeExIdx > 0) {
+        activeExIdx--;
+        warmupExerciseName = null;
+        saveViewState();
+        render();
+      }
+    });
 
     const counter = el('div', 'nav-counter');
     counter.textContent = `${activeExIdx + 1} / ${activeSession.exercises.length}`;
@@ -392,12 +681,20 @@
     const nextBtn = el('button', 'nav-btn');
     nextBtn.textContent = '›';
     nextBtn.disabled = activeExIdx === activeSession.exercises.length - 1;
-    nextBtn.addEventListener('click', () => { if (activeExIdx < activeSession.exercises.length - 1) { activeExIdx++; render(); } });
+    nextBtn.addEventListener('click', () => {
+      if (activeExIdx < activeSession.exercises.length - 1) {
+        activeExIdx++;
+        warmupExerciseName = null;
+        saveViewState();
+        render();
+      }
+    });
 
-    const focusToggle = el('button', 'nav-focus-btn');
+    const focusToggle = el('button', 'nav-focus-btn' + (focusMode ? ' active' : ''));
     focusToggle.innerHTML = '⛶ Focus';
     focusToggle.addEventListener('click', () => {
       focusMode = true;
+      saveViewState();
       renderFocus();
     });
 
@@ -417,14 +714,30 @@
     left.innerHTML = `<div class="exercise-name">${exercise.name}</div>
       <div class="exercise-meta">${exercise.sets} sets · ${exercise.repsPerSet} reps target</div>`;
 
+    const actions = el('div', 'exercise-header-actions');
+    const warmupBtn = el('button', 'icon-btn');
+    warmupBtn.textContent = 'WU';
+    warmupBtn.title = 'Warm-up builder';
+    warmupBtn.addEventListener('click', () => {
+      warmupExerciseName = warmupExerciseName === exercise.name ? null : exercise.name;
+      render();
+    });
+
     const histBtn = el('button', 'icon-btn');
     histBtn.textContent = '📋';
     histBtn.title = 'History';
     histBtn.addEventListener('click', () => openHistory(exercise.name));
 
+    actions.appendChild(warmupBtn);
+    actions.appendChild(histBtn);
     exHeader.appendChild(left);
-    exHeader.appendChild(histBtn);
+    exHeader.appendChild(actions);
     card.appendChild(exHeader);
+
+    if (warmupExerciseName === exercise.name) {
+      const warmupPanel = renderWarmupPanel(exercise);
+      if (warmupPanel) card.appendChild(warmupPanel);
+    }
 
     const grid = el('div', 'sets-grid');
     buildSetRows(exercise, () => timerStart(activeSession.targetRestSeconds || 90))
@@ -439,6 +752,8 @@
     const timerEl = el('div', 'rest-timer');
     timerEl.appendChild(buildTimerWidget());
     document.body.appendChild(timerEl);
+
+    saveViewState();
   }
 
   // ── Focus mode ──────────────────────────────────────────────────────────
@@ -460,6 +775,7 @@
     backBtn.title = 'Exit focus mode';
     backBtn.addEventListener('click', () => {
       focusMode = false;
+      saveViewState();
       overlay.remove();
       render();
     });
@@ -574,6 +890,8 @@
     prevBtn.disabled = activeExIdx === 0;
     prevBtn.addEventListener('click', () => {
       activeExIdx--;
+      warmupExerciseName = null;
+      saveViewState();
       renderFocus();
     });
 
@@ -583,11 +901,15 @@
     nextBtn.addEventListener('click', () => {
       if (isLast) {
         focusMode = false;
+        saveViewState();
         overlay.remove();
         render();
+        openSessionSummary();
         return;
       }
       activeExIdx++;
+      warmupExerciseName = null;
+      saveViewState();
       renderFocus();
     });
 
@@ -623,8 +945,17 @@
       const dx = e.changedTouches[0].clientX - startX;
       const dy = e.changedTouches[0].clientY - startY;
       if (Math.abs(dx) < Math.abs(dy) * 1.5 || Math.abs(dx) < 50) return;
-      if (dx < 0 && activeExIdx < activeSession.exercises.length - 1) { activeExIdx++; render(); }
-      else if (dx > 0 && activeExIdx > 0) { activeExIdx--; render(); }
+      if (dx < 0 && activeExIdx < activeSession.exercises.length - 1) {
+        activeExIdx++;
+        warmupExerciseName = null;
+        saveViewState();
+        render();
+      } else if (dx > 0 && activeExIdx > 0) {
+        activeExIdx--;
+        warmupExerciseName = null;
+        saveViewState();
+        render();
+      }
     }, { passive: true });
   }
 
@@ -641,6 +972,8 @@
     activeSession = oldestSession(data.sessions.filter(s => s.lastDate)) || data.sessions[0];
     activeExIdx = 0;
     focusMode = false;
+    warmupExerciseName = null;
+    saveViewState();
     document.getElementById('focus-overlay')?.remove();
     render();
   }
@@ -654,16 +987,27 @@
       data = await fetch(latest.dataUrl).then(r => { if (!r.ok) throw new Error('backup ' + r.status); return r.json(); });
       try { historyData = await fetch('data/history.json').then(r => r.ok ? r.json() : null); } catch {}
       try { phasesData = await fetch('data/phases.json').then(r => r.ok ? r.json() : null); } catch {}
-      activePhaseName = data.name;
-      // Merge live data into phasesData so the selector includes Phase 4 with real lastDates
-      if (phasesData && !phasesData[data.name]) {
+      const savedState = readUiState();
+      activePhaseName = savedState?.phaseName || data.name;
+      // Merge live data into phasesData so the selector includes the loaded phase with real lastDates
+      if (phasesData) {
         phasesData[data.name] = data.sessions;
-      } else if (phasesData) {
-        phasesData[data.name] = data.sessions; // always use live data for current phase
       }
-      activeSession = oldestSession(data.sessions);
-      activeExIdx = 0;
+      if (phasesData && activePhaseName !== data.name && phasesData[activePhaseName]) {
+        data = {
+          name: activePhaseName,
+          backupDate: data.backupDate,
+          sessions: phasesData[activePhaseName],
+        };
+      } else {
+        activePhaseName = data.name;
+      }
+      migrateLegacyFields(activePhaseName, data.sessions);
+      activeSession = sessionByName(savedState?.sessionName) || oldestSession(data.sessions);
+      activeExIdx = exerciseIndexByName(activeSession, savedState?.exerciseName) || 0;
+      focusMode = savedState?.focusMode === true;
       render();
+      if (focusMode) renderFocus();
     } catch (err) {
       app.innerHTML = `<div class="error">Failed to load: ${err.message}</div>`;
     }
