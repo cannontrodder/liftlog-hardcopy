@@ -1,11 +1,11 @@
 {
   "name": "Kyle Phase 4",
-  "backupDate": "2026-06-13",
+  "backupDate": "2026-06-15",
   "sessions": [
     {
       "name": "Push",
       "targetRestSeconds": 90,
-      "lastDate": "2026-06-08",
+      "lastDate": "2026-06-15",
       "exercises": [
         {
           "name": "Incline Dumbbell Press",
@@ -14,7 +14,7 @@
           "last": [
             {
               "weight": "25",
-              "reps": 6
+              "reps": 7
             },
             {
               "weight": "25",
@@ -29,7 +29,7 @@
           "last": [
             {
               "weight": "17.5",
-              "reps": 5
+              "reps": 6
             },
             {
               "weight": "17.5",
@@ -43,8 +43,8 @@
           "repsPerSet": 12,
           "last": [
             {
-              "weight": "120",
-              "reps": 7
+              "weight": "130",
+              "reps": 4
             },
             {
               "weight": "120",
@@ -58,8 +58,8 @@
           "repsPerSet": 15,
           "last": [
             {
-              "weight": "60",
-              "reps": 11
+              "weight": "65",
+              "reps": 8
             },
             {
               "weight": "65",
@@ -78,7 +78,7 @@
             },
             {
               "weight": "30",
-              "reps": 4
+              "reps": 5
             }
           ]
         },
@@ -93,7 +93,7 @@
             },
             {
               "weight": "80",
-              "reps": 6
+              "reps": 8
             }
           ]
         },
@@ -104,19 +104,19 @@
           "last": [
             {
               "weight": "50",
-              "reps": 6
+              "reps": 8
             },
             {
               "weight": "40",
-              "reps": 11
+              "reps": 10
             },
             {
               "weight": "35",
-              "reps": 13
+              "reps": 5
             },
             {
-              "weight": "35",
-              "reps": 8
+              "weight": "30",
+              "reps": 9
             }
           ]
         }
