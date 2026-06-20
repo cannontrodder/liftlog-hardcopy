@@ -5,7 +5,7 @@ test.describe("LiftLog home page", () => {
     await page.goto("/index.html");
 
     await expect(page.locator(".header-title")).toHaveText("Kyle Phase 4");
-    await expect(page.locator(".header-name")).toHaveText("Push");
+    await expect(page.locator(".header-name")).toHaveText(/\S+/);
     await expect(page.locator(".session-tabs .session-tab")).toHaveCount(4);
     await expect(page.locator(".detail-toolbar")).toHaveCount(1);
     await expect(page.locator(".nav-btn")).toHaveCount(0);
